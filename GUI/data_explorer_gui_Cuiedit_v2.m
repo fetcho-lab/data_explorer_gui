@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 09-Aug-2018 15:36:46
+% Last Modified by GUIDE v2.5 20-Sep-2018 12:42:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,10 +56,10 @@ handles.output = hObject;
 
 handles.sliceThickness = 20;
 
-homepath = getenv('HOME');
-fs = filesep;
-handles.guiHome_functions = [homepath,fs,'Dropbox',fs,'CellAnalysisUtilities',fs,'LightSheet' fs 'light_sheet_data_explorer_gui', fs, 'functions'];
-addpath(handles.guiHome_functions);
+% homepath = getenv('HOME');
+% fs = filesep;
+% handles.guiHome_functions = [homepath,fs,'Dropbox',fs,'CellAnalysisUtilities',fs,'LightSheet' fs 'light_sheet_data_explorer_gui', fs, 'functions'];
+% addpath(handles.guiHome_functions);
 handles.stackAcqFreq = 1; %initialized with a dummy value
 
 handles.cellSelect = 1; %for plotting on slice axis
@@ -2233,4 +2233,86 @@ for i1=1:ROIMasterNo
     handles.DispColor(currentRoiCell)=tempvector(i1);
 end
 handles=plot_pos_maps(handles);
+guidata(hObject,handles);
+
+
+% --- Executes on button press in gen_time_slice_movies.
+function gen_time_slice_movies_Callback(hObject, eventdata, handles)
+% hObject    handle to gen_time_slice_movies (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles=guidata(hObject);
+
+% set(handles.status_bar,'String','Loading...');
+% set(handles.slider2,'enable','off');
+% set(handles.slider1,'enable','off');
+% drawnow;
+
+currentDirectory = pwd;
+
+stackDirectory = uigetdir(pwd, 'Select .klb directory to generate time slice movies');
+cd(stackDirectory);
+
+mkdir('tsView');
+lsStackFiles= dir ('*.klb');
+stackdata = readImage(lsStackFiles(1).name);
+
+zSize = size(stackdata,3);
+tSize = numel(handles.stackfiles);
+
+% fs=filesep;
+cd('tsView');
+
+for z=1:zSize
+    stackName = sprintf('ts%03d',z);
+    tiffName{z} = [stackName,'.tif'];
+
+    if exist(tiffName{z},'file');
+       delete(tiffName{z});
+    end
+    
+%     tiffObj{z} = Tiff(tiffName,'a');
+
+end
+
+for t=1:tSize
+    fullStack = readImage(['..\',lsStackFiles(t).name]);
+    
+    if t==1 %detect whether uint8 or uint16
+        if isa(fullStack,'uint8')
+            BitsPerSample = 8;
+        elseif isa(fullStack,'uint16')
+            BitsPerSample = 16; 
+        end
+    end
+    
+    for m=1:zSize
+%         objt = tiffObj{m};
+
+        tiffObj = Tiff(tiffName{m},'a');
+        
+        tiffObj.setTag('Photometric',Tiff.Photometric.LinearRaw);
+        tiffObj.setTag('BitsPerSample',BitsPerSample);
+        tiffObj.setTag('ImageWidth',size(handles.currView,2));
+        tiffObj.setTag('ImageLength',size(handles.currView,1));
+        tiffObj.setTag('SamplesPerPixel',1);
+        tiffObj.setTag('Compression',Tiff.Compression.PackBits);
+        tiffObj.setTag('PlanarConfiguration',Tiff.PlanarConfiguration.Chunky);
+    
+        tiffObj.write( fullStack(:,:,m) );        
+    
+    end
+    
+    if t==tSize
+        writeDirectory(tiffObj);
+        tiffObj.close();
+    end
+    
+    disp(sprintf('Processed frame %03d',t));
+end    
+
+currZ = floor(zSize/2);
+stackName = sprintf('ts%03d',currZ);
+
+cd (currentDirectory);
 guidata(hObject,handles);
