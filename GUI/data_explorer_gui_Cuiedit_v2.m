@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 20-Sep-2018 12:42:15
+% Last Modified by GUIDE v2.5 20-Sep-2018 13:03:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -566,7 +566,7 @@ function sliceSelector_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(hObject);
 handles.currentSlice = round( get(hObject,'Value') );
-round( get(hObject,'Value') )
+% round( get(hObject,'Value') );
 % handles.currentSlice 
 % min=get(hObject,'Min')
 % max=get(hObject,'Max')
@@ -2316,3 +2316,37 @@ stackName = sprintf('ts%03d',currZ);
 
 cd (currentDirectory);
 guidata(hObject,handles);
+
+
+% --- Executes on button press in load_slice_movie.
+function load_slice_movie_Callback(hObject, eventdata, handles)
+% hObject    handle to load_slice_movie (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles=guidata(hObject);
+handles.currView = fast_readTiffSTACK(handles.currView,['tsView',fs,stackName,'.tif'],[size(handles.curr_fullStack,1),size(handles.curr_fullStack,2),handles.tSize]);
+% 
+% handles.showFrame = imshow(handles.currView(:,:,1),'Parent',handles.axes1);
+% set(handles.axes1,'YDir','normal');
+% caxis(handles.axes1,handles.cAxis);
+% 
+% set(handles.text2,'String','Stack 001');
+% set(handles.text1,'String', sprintf('Z %03d',currZ));
+    
+guidata(hObject, handles);
+
+%probably not in fact faster
+function stackImg = fast_readTiffSTACK(stackImg,tiffName,stackDimsXYT)
+%fast read of tsView files
+if ~isequal(size(stackImg),stackDimsXYT)
+    stackImg = zeros(stackDimsXYT(1),stackDimsXYT(2),stackDimsXYT(3));
+end
+tic
+
+stackImg = readImage(tiffName);
+% parfor k=1:stackDimsXYT(3)
+% %     tic
+%     stackImg(:,:,k) = imread(tiffName,'Index',k,'PixelRegion',{[1 stackDimsXYT(1)],[1,stackDimsXYT(2)]});
+% %     toc
+% end
+toc
