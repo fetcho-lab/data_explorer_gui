@@ -66,7 +66,7 @@ handles.cellSelect = 1; %for plotting on slice axis
 handles.cellSelect_idx = 1; %for keeping track of absolute cell identity
 
 handles.roi = struct;
-
+handles.currView = [];
 handles.im=[];
 % Update handles structure
 guidata(hObject, handles);
@@ -2324,8 +2324,12 @@ function load_slice_movie_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(hObject);
-handles.currView = fast_readTiffSTACK(handles.currView,['tsView',fs,stackName,'.tif'],[size(handles.curr_fullStack,1),size(handles.curr_fullStack,2),handles.tSize]);
-% 
+[file,path] = uigetfile('*.tif', 'Select tsView file');
+
+% handles.currView = fast_readTiffSTACK(handles.currView,['tsView',fs,stackName,'.tif'],[size(handles.curr_fullStack,1),size(handles.curr_fullStack,2),handles.tSize]);
+fs = filesep;
+disp('Reading file...');
+tic; handles.currView = readImage([path,fs,file]); toc;
 % handles.showFrame = imshow(handles.currView(:,:,1),'Parent',handles.axes1);
 % set(handles.axes1,'YDir','normal');
 % caxis(handles.axes1,handles.cAxis);
@@ -2335,18 +2339,18 @@ handles.currView = fast_readTiffSTACK(handles.currView,['tsView',fs,stackName,'.
     
 guidata(hObject, handles);
 
-%probably not in fact faster
-function stackImg = fast_readTiffSTACK(stackImg,tiffName,stackDimsXYT)
-%fast read of tsView files
-if ~isequal(size(stackImg),stackDimsXYT)
-    stackImg = zeros(stackDimsXYT(1),stackDimsXYT(2),stackDimsXYT(3));
-end
-tic
-
-stackImg = readImage(tiffName);
-% parfor k=1:stackDimsXYT(3)
-% %     tic
-%     stackImg(:,:,k) = imread(tiffName,'Index',k,'PixelRegion',{[1 stackDimsXYT(1)],[1,stackDimsXYT(2)]});
-% %     toc
+% %probably not in fact faster
+% function stackImg = fast_readTiffSTACK(stackImg,tiffName,stackDimsXYT)
+% %fast read of tsView files
+% if ~isequal(size(stackImg),stackDimsXYT)
+%     stackImg = zeros(stackDimsXYT(1),stackDimsXYT(2),stackDimsXYT(3));
 % end
-toc
+% tic
+% 
+% stackImg = readImage(tiffName);
+% % parfor k=1:stackDimsXYT(3)
+% % %     tic
+% %     stackImg(:,:,k) = imread(tiffName,'Index',k,'PixelRegion',{[1 stackDimsXYT(1)],[1,stackDimsXYT(2)]});
+% % %     toc
+% % end
+% toc
