@@ -435,6 +435,7 @@ function handles=plot_slice_maps(handles)
 
 if handles.PlotSelect.Value < 3
     set(handles.load_z_stack, 'Visible', 'off');
+    set(handles.sliceAx,'Visible','on');
     handles.cellClicker = handles.sliceAx.ButtonDownFcn;
     axes(handles.sliceAx), cla
     sK = handles.currentSlice;
@@ -2365,33 +2366,52 @@ function handles = reset_slider_handles(handles)
         if ~isempty(handles.zStack)
         zMx = size(handles.zStack,3);
         currScale = handles.cellSelector.Value/handles.cellSelector.Max;
-        handles.cellSelector.Value = round(currScale * zMx);
         set(handles.cellSelector,'Max',zMx);
         set(handles.cellSelector,'Min',1);
         set(handles.cellSelector,'SliderStep',[1/zMx, 5/zMx]); 
+        
+        newValue = round(currScale * zMx);
+        if newValue < 1 || newValue > handles.cellSelector.Max
+            newValue = round(handles.cellSelector.Max/2);
+        end
+        handles.cellSelector.Value = newValue;
+        
         end
 
         if ~isempty(handles.currView)
         tMx = size(handles.currView,3);
         currScale = handles.sliceSelector.Value/handles.sliceSelector.Max;
-        handles.cellSelector.Value = round(currScale * tMx);
         set(handles.sliceSelector,'Max', tMx);
         set(handles.sliceSelector,'SliderStep',[ 1/tMx, 5/tMx]);
+        newValue = round(currScale * tMx);
+        if newValue < 1 || newValue > handles.sliceSelector.Max
+            newValue = round(handles.sliceSelector.Max/2);
+        end
+        handles.sliceSelector.Value = newValue;
         end
     else
         currScale = handles.sliceSelector.Value/handles.sliceSelector.Max;
-        handles.cellSelector.Value = round(currScale * length(handles.linearRange)-1);
         set(handles.sliceSelector,'Max',length(handles.linearRange)-1);
         set(handles.sliceSelector,'SliderStep',[ 1/(length(handles.linearRange)-1), 0.1]);
-
+        newValue = round(currScale * length(handles.linearRange)-1);
+        if newValue < 1 || newValue > handles.sliceSelector.Max
+            newValue = round(handles.sliceSelector.Max/2);
+        end
+        handles.sliceSelector.Value = newValue;
+        
         handles.inSlice = findInSlice(handles);
         inSlice = handles.inSlice;
         nCells = sum(inSlice);
-
         currScale = handles.cellSelector.Value/handles.cellSelector.Max;
-        handles.cellSelector.Value = round(currScale * nCells);
         set(handles.cellSelector, 'Max', nCells);
         set(handles.cellSelector,'SliderStep',[1/nCells, 5*(1/nCells)]);
+        
+        newValue = round(currScale * nCells);
+        if newValue < 1 || newValue > handles.cellSelector.Max
+            newValue = round(handles.cellSelector.Max/2);
+        end
+        handles.cellSelector.Value = newValue;
+        
     end
 
 
