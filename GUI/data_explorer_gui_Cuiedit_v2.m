@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 20-Sep-2018 13:03:08
+% Last Modified by GUIDE v2.5 21-Sep-2018 14:10:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,6 +67,8 @@ handles.cellSelect_idx = 1; %for keeping track of absolute cell identity
 
 handles.roi = struct;
 handles.currView = [];
+handles.zStack = [];
+
 handles.im=[];
 % Update handles structure
 guidata(hObject, handles);
@@ -426,24 +428,31 @@ elseif handles.PlotSelect.Value==2
         if get(handles.CellFinderStay,'Value')==1
             handles=DrawCirclePoint_Special(hObject,handles);
         end
+elseif handles.PlotSelect.Value==3
+    currentT = ceil( get(handles.sliceSelector, 'Value') * size(handles.currView,3) / get(handles.sliceSelector,'Max') );
+    axes(handles.slicePosMap);
+    imagesc(handles.currView(:,:,currentT));
+    %TO DO: carefully examine steps to insure each click is 1 and that ends
+    %are valid
 end
 set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
 
 function handles=plot_slice_maps(handles)
-handles.cellClicker = handles.sliceAx.ButtonDownFcn;
 
-axes(handles.sliceAx), cla
-sK = handles.currentSlice;
-% RCSegmentation = handles.linearRange;
-% all_inSlice = handles.spPos(:,1) >  RCSegmentation(sK-1) & handles.spPos(:,1) < RCSegmentation(sK);
-all_inSlice = findInSlice(handles);
-allDots = handles.spPos(all_inSlice,:);
-handles.inSlice = all_inSlice; 
+if handles.PlotSelect.Value < 3
+    set(handles.load_z_stack, 'Visible', 'off');
+    handles.cellClicker = handles.sliceAx.ButtonDownFcn;
+    axes(handles.sliceAx), cla
+    sK = handles.currentSlice;
+    % RCSegmentation = handles.linearRange;
+    % all_inSlice = handles.spPos(:,1) >  RCSegmentation(sK-1) & handles.spPos(:,1) < RCSegmentation(sK);
+    all_inSlice = findInSlice(handles);
+    allDots = handles.spPos(all_inSlice,:);
+    handles.inSlice = all_inSlice; 
 
-current_roi = get(handles.roiMaster,'Value');
-% if size(handles.roi(current_roi).members)>0
+    current_roi = get(handles.roiMaster,'Value');
+
     if get(handles.ShowAllROICheck,'Value')==0
-%         current_roi = get(handles.roiMaster,'Value');
         roi_in_slice = handles.roi(current_roi).members(all_inSlice);
     elseif get(handles.ShowAllROICheck,'Value')==1
         current_roi_cells=handles.roi(1).members;
@@ -456,7 +465,7 @@ current_roi = get(handles.roiMaster,'Value');
     if islogical(roi_in_slice)==0
         roi_in_slice =logical(roi_in_slice);
     end
-    
+
     plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off');
     if isfield(handles,'DispColor')==0
         ColorR='r';
@@ -477,31 +486,17 @@ current_roi = get(handles.roiMaster,'Value');
     title(sprintf('Slice %2.0f',sK),'color',[1,1,1]);
 
     handles.sliceAx.ButtonDownFcn = handles.cellClicker;
-
-% end
-% plot3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),'.','color','r','hittest','off');
-%mark1
-% CellNoToDisp=find(roi_in_slice)
-
-
-
-
-% plot(handles.spPos(:,1),handles.spPos(:,2),'k.');
-% axis equal
-% axis tight
-% 
-% currentLim = get(gca,'YLim');
-% 
-% if isfield(handles,'SliceMap_gLine')
-%    for gl = 1:numel(handles.SliceMap_gLine)
-%        delete(handles.SliceMap_gLine{gl} );
-%    end
-% end
-% axis equal
-% axis tight
-% 
-% handles.SliceMap_gLine{1} = plot([RCSegmentation(sK),RCSegmentation(sK)], currentLim, 'g');
-% handles.SliceMap_gLine{2} = plot([RCSegmentation(sK-1),RCSegmentation(sK-1)], currentLim, 'g');
+else
+    set(handles.load_z_stack, 'Visible', 'on');
+    if ~isempty(handles.zStack)
+       axes(handles.sliceAx), cla;
+       view(2); %set 2D view
+       imshow(handles.zStack(:,:,1)', 'Parent', gca); 
+       caxis('auto');
+       handles.sliceAx = gca;
+       axis equal
+    end
+end
 
 function inSlice = findInSlice(handles)
 %consisent framework for identifying which cells are in slice
@@ -2366,3 +2361,15 @@ guidata(hObject, handles);
 % % %     toc
 % % end
 % toc
+
+
+% --- Executes on button press in load_z_stack.
+function load_z_stack_Callback(hObject, eventdata, handles)
+% hObject    handle to load_z_stack (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+[file,path] = uigetfile({'*.klb','*.tif'}, 'Select reference z-stack to load');
+tic; handles.zStack = readImage([path,filesep,file]); toc; 
+plot_slice_maps(handles);
+guidata(hObject, handles);
