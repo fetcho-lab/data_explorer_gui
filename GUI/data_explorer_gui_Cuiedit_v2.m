@@ -755,6 +755,18 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes during object creation, after setting all properties.
+function roiMaster_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to roiListbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
 %--- Executes on key press with focus on roiListbox and none of its controls.
 function roiListbox_KeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to roiListbox (see GCBO)
@@ -2258,7 +2270,7 @@ lsStackFiles= dir ('*.klb');
 stackdata = readImage(lsStackFiles(1).name);
 
 zSize = size(stackdata,3);
-tSize = numel(handles.stackfiles);
+tSize = numel(stackDirectory);
 
 % fs=filesep;
 cd('tsView');
@@ -2293,8 +2305,8 @@ for t=1:tSize
         
         tiffObj.setTag('Photometric',Tiff.Photometric.LinearRaw);
         tiffObj.setTag('BitsPerSample',BitsPerSample);
-        tiffObj.setTag('ImageWidth',size(handles.currView,2));
-        tiffObj.setTag('ImageLength',size(handles.currView,1));
+        tiffObj.setTag('ImageWidth',size(fullStack,2));
+        tiffObj.setTag('ImageLength',size(fullStack,1));
         tiffObj.setTag('SamplesPerPixel',1);
         tiffObj.setTag('Compression',Tiff.Compression.PackBits);
         tiffObj.setTag('PlanarConfiguration',Tiff.PlanarConfiguration.Chunky);
