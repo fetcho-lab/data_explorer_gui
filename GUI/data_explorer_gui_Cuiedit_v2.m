@@ -202,56 +202,50 @@ function handles = plot_fts_in_slice(handles)
 %cellSelector slide
 
 % inSlice = alxPos(:,1) >  RCSegmentation(sK-1) & alxPos(:,1) < RCSegmentation(sK) & cellRecruitment;
- handles.inSlice = findInSlice(handles);
-inSlice = handles.inSlice;
-nCells = sum(inSlice);
-if nCells > 0
-    
-    set(handles.cellSelector,'Max',nCells);
-    set(handles.cellSelector,'Min',1);
-    set(handles.cellSelector,'SliderStep',[1/nCells, 5*(1/nCells)]);
-    current_selector_value =  get(handles.cellSelector,'Value');
-    if current_selector_value > nCells
-        set(handles.cellSelector,'Value', round(nCells/2) );
-        handles.cellSelect = round(nCells/2);
+if handles.PlotSelect.Value < 3
+    handles.inSlice = findInSlice(handles);
+    inSlice = handles.inSlice;
+    nCells = sum(inSlice);
+    if nCells > 0
+
+        set(handles.cellSelector,'Max',nCells);
+        set(handles.cellSelector,'Min',1);
+        set(handles.cellSelector,'SliderStep',[1/nCells, 5*(1/nCells)]);
+        current_selector_value =  get(handles.cellSelector,'Value');
+        if current_selector_value > nCells
+            set(handles.cellSelector,'Value', round(nCells/2) );
+            handles.cellSelect = round(nCells/2);
+        end
+
+    else
+        axes(handles.ScatterPlotAx);
+        cla;
+        return;
     end
 
+    f_inSlice = find(inSlice);
+    % randtoSelect = randperm( sum(inSlice) );
+    cellSelect = f_inSlice( handles.cellSelect);
+    handles.cellSelect_idx = cellSelect;
+    %updates circled point on coronal slice plot
+    axes(handles.sliceAx);
+    if isfield(handles,'CirclePointinSlice')
+           delete(handles.CirclePointinSlice );
+    end
+    hold on;
+
+    handles.CellNoToFindinSlice=cellSelect;
+    handles=DrawCirclePointinSlice(handles);
+    handles=plotfts(handles,cellSelect);
 else
-    axes(handles.ScatterPlotAx);
-    cla;
-    return;
+    ylim = get(handles.dffPlot, 'YLim');
+    axes(handles.dffPlot); hold on
+    if isfield(handles,'timeLine')
+           delete(handles.timeLine );
+    end
+    handles.timeLine = plot([handles.sliceSelector.Value, handles.sliceSelector.Value], ylim, 'r-');
+    hold off
 end
-
-f_inSlice = find(inSlice);
-% randtoSelect = randperm( sum(inSlice) );
-cellSelect = f_inSlice( handles.cellSelect);
-handles.cellSelect_idx = cellSelect;
-%updates circled point on coronal slice plot
-axes(handles.sliceAx);
-if isfield(handles,'CirclePointinSlice')
-       delete(handles.CirclePointinSlice );
-end
-hold on;
-
-% handles.circlePoint = plot3 (handles.spPos(cellSelect,1), handles.spPos(cellSelect,2),handles.spPos(cellSelect,3),'ro','linewidth',2);
-
-handles.CellNoToFindinSlice=cellSelect;
-handles=DrawCirclePointinSlice(handles);
-handles=plotfts(handles,cellSelect);
-
-%updates dFF plot with current cell
-% axes(handles.dffPlot), cla %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
-% % yyaxis left
-% hold on
-% 
-% % plot(handles.fts(cellSelect,:),'color',[0 1 0],'linewidth',2);
-% plotTraces_GUI(handles.fts(cellSelect,:), 100, 10, handles.dffPlot);
-% 
-% xlabel('Time (s)');
-% ylabel('\Delta F/F');
-% title('Fluorescence Time Series', 'color', [1 1 1]);
-% set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
-% handles.dffPlot = gca;
 
 
 function handles=DrawCirclePointinSlice(handles)
@@ -429,7 +423,7 @@ elseif handles.PlotSelect.Value==2
             handles=DrawCirclePoint_Special(hObject,handles);
         end
 elseif handles.PlotSelect.Value==3
-    currentT = ceil( get(handles.sliceSelector, 'Value') * size(handles.currView,3) / get(handles.sliceSelector,'Max') );
+    currentT =  round( get(handles.sliceSelector,'Value') );
     axes(handles.slicePosMap);
     imagesc(handles.currView(:,:,currentT));
     %TO DO: carefully examine steps to insure each click is 1 and that ends
@@ -489,9 +483,10 @@ if handles.PlotSelect.Value < 3
 else
     set(handles.load_z_stack, 'Visible', 'on');
     if ~isempty(handles.zStack)
+       zLvl = round( get(handles.cellSelector, 'Value') );
        axes(handles.sliceAx), cla;
        view(2); %set 2D view
-       imshow(handles.zStack(:,:,1)', 'Parent', gca); 
+       imshow(handles.zStack(:,:,zLvl)', 'Parent', gca); 
        caxis('auto');
        handles.sliceAx = gca;
        axis equal
@@ -591,8 +586,12 @@ function handles = cellSelector_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
+if handles.PlotSelect.Value == 3
+    plot_slice_maps(handles);
+else
 handles.cellSelect = round( get(hObject,'Value') );
 handles = plot_fts_in_slice(handles);
+end
 guidata(hObject,handles);
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
@@ -1546,7 +1545,12 @@ function PlotSelect_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns PlotSelect contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from PlotSelect
-plot_pos_maps(handles);
+handles=guidata(hObject);
+%rescale sliceSelector and cellSelector to accomdate differing functions. 
+handles = reset_slider_handles(handles);
+handles = plot_pos_maps(handles);
+plot_slice_maps(handles);
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function PlotSelect_CreateFcn(hObject, eventdata, handles)
@@ -2333,17 +2337,11 @@ function load_slice_movie_Callback(hObject, eventdata, handles)
 handles=guidata(hObject);
 [file,path] = uigetfile('*.tif', 'Select tsView file');
 
-% handles.currView = fast_readTiffSTACK(handles.currView,['tsView',fs,stackName,'.tif'],[size(handles.curr_fullStack,1),size(handles.curr_fullStack,2),handles.tSize]);
 fs = filesep;
 disp('Reading file...');
 tic; handles.currView = readImage([path,fs,file]); toc;
-% handles.showFrame = imshow(handles.currView(:,:,1),'Parent',handles.axes1);
-% set(handles.axes1,'YDir','normal');
-% caxis(handles.axes1,handles.cAxis);
-% 
-% set(handles.text2,'String','Stack 001');
-% set(handles.text1,'String', sprintf('Z %03d',currZ));
-    
+handles = reset_slider_handles(handles);
+
 guidata(hObject, handles);
 
 % %probably not in fact faster
@@ -2362,6 +2360,40 @@ guidata(hObject, handles);
 % % end
 % toc
 
+function handles = reset_slider_handles(handles)
+    if handles.PlotSelect.Value == 3
+        if ~isempty(handles.zStack)
+        zMx = size(handles.zStack,3);
+        currScale = handles.cellSelector.Value/handles.cellSelector.Max;
+        handles.cellSelector.Value = round(currScale * zMx);
+        set(handles.cellSelector,'Max',zMx);
+        set(handles.cellSelector,'Min',1);
+        set(handles.cellSelector,'SliderStep',[1/zMx, 5/zMx]); 
+        end
+
+        if ~isempty(handles.currView)
+        tMx = size(handles.currView,3);
+        currScale = handles.sliceSelector.Value/handles.sliceSelector.Max;
+        handles.cellSelector.Value = round(currScale * tMx);
+        set(handles.sliceSelector,'Max', tMx);
+        set(handles.sliceSelector,'SliderStep',[ 1/tMx, 5/tMx]);
+        end
+    else
+        currScale = handles.sliceSelector.Value/handles.sliceSelector.Max;
+        handles.cellSelector.Value = round(currScale * length(handles.linearRange)-1);
+        set(handles.sliceSelector,'Max',length(handles.linearRange)-1);
+        set(handles.sliceSelector,'SliderStep',[ 1/(length(handles.linearRange)-1), 0.1]);
+
+        handles.inSlice = findInSlice(handles);
+        inSlice = handles.inSlice;
+        nCells = sum(inSlice);
+
+        currScale = handles.cellSelector.Value/handles.cellSelector.Max;
+        handles.cellSelector.Value = round(currScale * nCells);
+        set(handles.cellSelector, 'Max', nCells);
+        set(handles.cellSelector,'SliderStep',[1/nCells, 5*(1/nCells)]);
+    end
+
 
 % --- Executes on button press in load_z_stack.
 function load_z_stack_Callback(hObject, eventdata, handles)
@@ -2371,5 +2403,6 @@ function load_z_stack_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 [file,path] = uigetfile({'*.klb','*.tif'}, 'Select reference z-stack to load');
 tic; handles.zStack = readImage([path,filesep,file]); toc; 
+handles = reset_slider_handles(handles);
 plot_slice_maps(handles);
 guidata(hObject, handles);
