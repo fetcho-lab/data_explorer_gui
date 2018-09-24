@@ -460,11 +460,11 @@ if handles.PlotSelect.Value < 3
         current_roi_cells(current_roi_cells>0)=1;
         roi_in_slice = current_roi_cells(all_inSlice);
     end
+    
     if islogical(roi_in_slice)==0
         roi_in_slice =logical(roi_in_slice);
     end
 
-    plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off','Parent',handles.sliceAx);
     if isfield(handles,'DispColor')==0
         ColorR='r';
     else
@@ -474,8 +474,13 @@ if handles.PlotSelect.Value < 3
         assignin('base','roi_in_slice',roi_in_slice);
         assignin('base','ColorRinSlice',ColorR);
     end
-    caxis([0 100]);
-    scatter3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),100,ColorR,'.','hittest','off','Parent',handles.sliceAx);
+    
+    hold(handles.sliceAx,'on');
+    plot3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),'.','color',[1 0 0],'hittest','off','Parent',handles.sliceAx);
+    plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off','Parent',handles.sliceAx);
+    hold(handles.sliceAx,'off');
+%     caxis([0 100]);
+    
 
     set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
     grid on
@@ -484,6 +489,7 @@ if handles.PlotSelect.Value < 3
     title(sprintf('Slice %2.0f',sK),'color',[1,1,1]);
 
     handles.sliceAx.ButtonDownFcn = handles.cellClicker;
+    
 elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
        zLvl = round( get(handles.cellSelector, 'Value') );
