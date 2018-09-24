@@ -427,6 +427,7 @@ elseif handles.PlotSelect.Value==3
     else
         imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
     end
+    title(handles.slicePosMap,sprintf('Stack %04.0f', currentT));
     pause(0.005);
     drawnow;
 %     colormap(gca, 'jet');
@@ -504,6 +505,7 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
     else
        imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
     end
+       title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
        drawnow;
        pause(0.005);
 %        handles.sliceAx = gca;
