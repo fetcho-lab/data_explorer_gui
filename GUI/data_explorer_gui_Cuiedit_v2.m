@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 21-Sep-2018 14:10:48
+% Last Modified by GUIDE v2.5 24-Sep-2018 13:31:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -142,7 +142,11 @@ else
     handles.labelVector(1:end) = 1;
 end
 
-handles=plot_slice_maps(handles);
+handles.ColorOfDots= max(handles.fts');%set color of dots to each cells' highest fluo value.
+handles.caxis0.String = num2str( min(handles.ColorOfDots), '%4.0f' );
+handles.caxis1.String = num2str( max (handles.ColorOfDots), '%4.0f' );
+
+handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles);
 
@@ -331,10 +335,9 @@ if handles.PlotSelect.Value==1
     % plot3(posR(:,1),posR(:,2),posR(:,3),'r.');
     %----Cui Edit----
     posAllCell=handles.spPos;
-    handles.ColorOfDots=max(handles.fts');%set color of dots to each cells' highest fluo value.
     scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.ColorOfDots,'.','hittest','off', 'Parent', handles.slicePosMap);
     colormap jet;
-    caxis([min(handles.ColorOfDots),max(handles.ColorOfDots)])
+    caxis([str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
     CB1=colorbar;
     CB1.Color='w';
     
@@ -414,7 +417,16 @@ elseif handles.PlotSelect.Value==2
         end
 elseif handles.PlotSelect.Value==3
     currentT =  round( get(handles.sliceSelector,'Value') );
-    imshow(handles.currView(:,:,currentT),[50 1000], 'Parent', handles.slicePosMap);
+    climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
+    if isnan(climz(1))
+       imshow(handles.currView(:,:,currentT), [50 1000], 'Parent', handles.slicePosMap);
+       caxis(handles.slicePosMap, 'auto');
+       climz = get(handles.slicePosMap, 'CLim');
+       handles.caxis0.String = num2str(climz(1), '%4.0f');
+       handles.caxis1.String = num2str(climz(2), '%4.0f');       
+    else
+        imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
+    end
     pause(0.005);
     drawnow;
 %     colormap(gca, 'jet');
@@ -475,8 +487,17 @@ if handles.PlotSelect.Value < 3
 elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
        zLvl = round( get(handles.cellSelector, 'Value') );
-       axes(handles.sliceAx); cla;
-       imshow(handles.zStack(:,:,zLvl), [50, 1000], 'Parent', handles.sliceAx); 
+       climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
+%        axes(handles.sliceAx); cla;
+    if isnan(climz(1))
+       imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
+       caxis(handles.sliceAx, 'auto');
+       climz = get(handles.sliceAx, 'CLim');
+       handles.caxis0.String = num2str(climz(1), '%4.0f');
+       handles.caxis1.String = num2str(climz(2), '%4.0f');       
+    else
+       imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
+    end
        drawnow;
        pause(0.005);
 %        handles.sliceAx = gca;
@@ -1549,8 +1570,10 @@ if get(hObject, 'Value') < 3
     set(handles.slicePosMap, 'Visible', 'on');
     colormap(handles.slicePosMap, 'jet')
 else
-    axes(handles.sliceAx); view(2);
+    axes(handles.sliceAx); view(2); cla;
     set(handles.load_z_stack, 'Visible', 'on');
+    handles.caxis0.String = '';
+    handles.caxis1.String = '';
 end
 
 handles = plot_pos_maps(handles);
@@ -2432,3 +2455,49 @@ handles = reset_slider_handles(handles);
 handles.calling_function = 'Load Z';
 plot_slice_maps(handles);
 guidata(hObject, handles);
+
+
+
+function caxis0_Callback(hObject, eventdata, handles)
+% hObject    handle to caxis0 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of caxis0 as text
+%        str2double(get(hObject,'String')) returns contents of caxis0 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function caxis0_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to caxis0 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function caxis1_Callback(hObject, eventdata, handles)
+% hObject    handle to caxis1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of caxis1 as text
+%        str2double(get(hObject,'String')) returns contents of caxis1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function caxis1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to caxis1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
