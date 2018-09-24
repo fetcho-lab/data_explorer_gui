@@ -1546,6 +1546,8 @@ handles = reset_slider_handles(handles);
 if get(hObject, 'Value') < 3
     axes(handles.sliceAx); view(3);
     set(handles.load_z_stack, 'Visible', 'off');
+    set(handles.slicePosMap, 'Visible', 'on');
+    colormap(handles.slicePosMap, 'jet')
 else
     axes(handles.sliceAx); view(2);
     set(handles.load_z_stack, 'Visible', 'on');
@@ -2427,5 +2429,6 @@ handles = guidata(hObject);
 [file,path] = uigetfile({'*.klb','*.tif'}, 'Select reference z-stack to load');
 tic; handles.zStack = readImage([path,filesep,file]); toc; 
 handles = reset_slider_handles(handles);
+handles.calling_function = 'Load Z';
 plot_slice_maps(handles);
 guidata(hObject, handles);
