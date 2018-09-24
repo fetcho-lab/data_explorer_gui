@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 24-Sep-2018 13:31:44
+% Last Modified by GUIDE v2.5 24-Sep-2018 15:51:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,6 +64,8 @@ handles.stackAcqFreq = 1; %initialized with a dummy value
 
 handles.cellSelect = 1; %for plotting on slice axis
 handles.cellSelect_idx = 1; %for keeping track of absolute cell identity
+
+handles.microns_per_z = 5;
 
 handles.roi = struct;
 handles.currView = [];
@@ -427,6 +429,17 @@ elseif handles.PlotSelect.Value==3
     else
         imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
     end
+    
+    if ~isfield(handles,'cell_roi_list') || isempty(handles.cell_roi_list)
+        roi_members_cell_no = find(handles.roi.members);
+        handles.cell_roi_list = roi_members_cell_no(handles.roiListbox.Value);
+    end
+    
+    if length(handles.cell_roi_list) > 0
+        cxy = handles.spPos(handles.cell_roi_list,1:2)/handles.Sc(1,1);
+        rxy = handles.spRadiiXYZ(handles.cell_roi_list,1)/handles.Sc(1,1);
+        handles.sPMap_Ax_roi = viscircles(handles.slicePosMap, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
+    end
     title(handles.slicePosMap,sprintf('Stack %04.0f', currentT));
     pause(0.005);
     drawnow;
@@ -506,6 +519,13 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
        imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
     end
        title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
+       inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
+       roi_in_slice = handles.roi.members & inZ;
+       if sum(roi_in_slice) > 0
+           cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
+           rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
+           handles.sAx_roi = viscircles(handles.sliceAx, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
+       end
        drawnow;
        pause(0.005);
 %        handles.sliceAx = gca;
@@ -855,6 +875,8 @@ function ExportROI_Callback(hObject, eventdata, handles)
 roi = handles.roi;
 [f,path] = uiputfile('roi.mat');
 save([path,f],'roi');
+%hint: roi struct has fields members (logical), name (string) and ROICellNo
+%(int)
 
 % --- Executes on button press in LoadROI.
 function LoadROI_Callback(hObject, eventdata, handles)
@@ -1575,11 +1597,13 @@ handles = reset_slider_handles(handles);
 if get(hObject, 'Value') < 3
     axes(handles.sliceAx); view(3);
     set(handles.load_z_stack, 'Visible', 'off');
+    set(handles.throw_roi_button, 'Visible', 'off');
     set(handles.slicePosMap, 'Visible', 'on');
     colormap(handles.slicePosMap, 'jet')
 else
     axes(handles.sliceAx); view(2); cla;
     set(handles.load_z_stack, 'Visible', 'on');
+    set(handles.throw_roi_button, 'Visible', 'on');
     handles.caxis0.String = '';
     handles.caxis1.String = '';
 end
@@ -2509,3 +2533,17 @@ function caxis1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in throw_roi_button.
+function throw_roi_button_Callback(hObject, eventdata, handles)
+% hObject    handle to throw_roi_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+zLvl = round( get(handles.cellSelector, 'Value') );
+roi_z = handles.spPos(handles.roi.members,3);
+inZ = round( roi_z/handles.microns_per_z ) == zLvl;
+handles.roiListbox.Value = find(inZ);
+handles.cell_roi_list = [];
+guidata(hObject, handles);
