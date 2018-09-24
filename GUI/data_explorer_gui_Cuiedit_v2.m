@@ -68,8 +68,13 @@ handles.cellSelect_idx = 1; %for keeping track of absolute cell identity
 handles.roi = struct;
 handles.currView = [];
 handles.zStack = [];
+handles.calling_function = 'None';
 
 handles.im=[];
+
+handles.timeListener=addlistener(handles.sliceSelector,'ContinuousValueChange',@sliceSelector_Callback);
+handles.zListener=addlistener(handles.cellSelector,'ContinuousValueChange',@cellSelector_Callback);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -174,7 +179,7 @@ set(handles.sliceSelector,'Max',length(handles.linearRange)-1);
 set(handles.sliceSelector,'Value',handles.currentSlice);
 set(handles.sliceSelector,'SliderStep',[ 1/(length(handles.linearRange)-1), 0.1]);
 
-handles=plot_slice_maps(handles);
+handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles);
 guidata(hObject, handles);
@@ -238,13 +243,20 @@ if handles.PlotSelect.Value < 3
     handles=DrawCirclePointinSlice(handles);
     handles=plotfts(handles,cellSelect);
 else
-    ylim = get(handles.dffPlot, 'YLim');
-    axes(handles.dffPlot); hold on
-    if isfield(handles,'timeLine')
-           delete(handles.timeLine );
+    
+%     axes(handles.dffPlot); hold on
+    if isfield(handles,'timeLine') && ishandle(handles.timeLine)
+%         set(handles.timeLine, 'XData', [handles.sliceSelector.Value, handles.sliceSelector.Value]);
+          handles.timeLine.XData = [handles.sliceSelector.Value, handles.sliceSelector.Value];
+          handles.timeLine.Visible = 'on';
+    else
+        ylim = get(handles.dffPlot, 'YLim');
+        handles.timeLine = plot([handles.sliceSelector.Value, handles.sliceSelector.Value], ylim, 'r-', 'Parent', handles.dffPlot);
+        handles.timeLine.Visible = 'off';
+%         disp('Setting new time line');
+        pause(0.01);
     end
-    handles.timeLine = plot([handles.sliceSelector.Value, handles.sliceSelector.Value], ylim, 'r-');
-    hold off
+%     hold off
 end
 
 
@@ -255,7 +267,7 @@ if isfield(handles,'CirclePointinSlice')
     delete(handles.CirclePointinSlice);
 end
 
-handles.CirclePointinSlice=plot3(handles.spPos(handles.CellNoToFindinSlice,1), handles.spPos(handles.CellNoToFindinSlice,2),handles.spPos(handles.CellNoToFindinSlice,3),'bo','linewidth',3,'Markersize',10);
+handles.CirclePointinSlice=plot3(handles.spPos(handles.CellNoToFindinSlice,1), handles.spPos(handles.CellNoToFindinSlice,2),handles.spPos(handles.CellNoToFindinSlice,3),'bo','linewidth',3,'Markersize',10,'Parent',handles.sliceAx);
 % guidata(hObject,handles);
 % assignin('base','circinslice',handles.CirclePointinSlice);
 
@@ -266,28 +278,6 @@ if isfield(handles,'CirclePoint')
     delete(handles.CirclePoint);
 end
 handles.CirclePoint=plot3(handles.spPos(handles.CellNoToFind,1), handles.spPos(handles.CellNoToFind,2),handles.spPos(handles.CellNoToFind,3),'wo','linewidth',3,'Markersize',10);
-% guidata(hObject,handles);
-% 
-% function handles=DrawCirclePoint_Special(hObject,handles)
-% % axes(handles.sliceAx);
-% temp=get(handles.CellFinderStay,'Value')
-% 
-% % assignin('base','handles11',handles);
-% if get(handles.CellFinderStay,'Value')==0
-%     if isfield(handles,'CirclePoint_Special')==0
-%         handles.CirclePoint_Special=plot3(handles.spPos(handles.CellNoToFind_Special,1), handles.spPos(handles.CellNoToFind_Special,2),handles.spPos(handles.CellNoToFind_Special,3),'yo','linewidth',3,'Markersize',10);
-%     else
-%         delete(handles.CirclePoint_Special);
-%         handles.CirclePoint_Special=plot3(handles.spPos(handles.CellNoToFind_Special,1), handles.spPos(handles.CellNoToFind_Special,2),handles.spPos(handles.CellNoToFind_Special,3),'yo','linewidth',3,'Markersize',10);
-%     end
-% elseif get(handles.CellFinderStay,'Value')==1
-%     handles.CirclePoint_Special=plot3(handles.spPos(handles.CellNoToFind_Special,1), handles.spPos(handles.CellNoToFind_Special,2),handles.spPos(handles.CellNoToFind_Special,3),'yo','linewidth',3,'Markersize',10);
-% end
-% assignin('base','handles22',handles);
-% guidata(hObject,handles);
-
-% assignin('base','circinslice',handles.CirclePointinSlice);
-
 
 function handles=plotfts(handles, cellSelect)
 %plots fluorescent time series on the time series plot
@@ -322,9 +312,9 @@ end
 xlabel('Frames');
 title('Fluorescence Time Series', 'color', [1 1 1]);
 set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
-handles.dffPlot = gca;
+% handles.dffPlot = gca;
 
-function handles=plot_pos_maps(handles)
+function handles = plot_pos_maps(handles)
 %plots a recruitment map onto sliceAx given the current slice selection
 %NOTE: CORRECT SLICE IS K:K+1 AND NUMBER OF SLICES IS
 %LENGTH(RCSEGMENTATION)- 1
@@ -342,7 +332,7 @@ if handles.PlotSelect.Value==1
     %----Cui Edit----
     posAllCell=handles.spPos;
     handles.ColorOfDots=max(handles.fts');%set color of dots to each cells' highest fluo value.
-    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.ColorOfDots,'.','hittest','off');
+    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.ColorOfDots,'.','hittest','off', 'Parent', handles.slicePosMap);
     colormap jet;
     caxis([min(handles.ColorOfDots),max(handles.ColorOfDots)])
     CB1=colorbar;
@@ -350,7 +340,7 @@ if handles.PlotSelect.Value==1
     
     % CB1.Label.String='Max Fluorescence Intensity of Cells (Dots)';
     posR_C = handles.spPos( handles.inSlice,:);
-    plot3(posR_C(:,1),posR_C(:,2),posR_C(:,3),'k.');
+    plot3(posR_C(:,1),posR_C(:,2),posR_C(:,3),'k.','Parent', handles.slicePosMap);
     grid on;
     xlabel('X','Color','w');
     ylabel('Y','Color','w');
@@ -391,14 +381,14 @@ elseif handles.PlotSelect.Value==2
             assignin('base','ColorR',ColorR);
             assignin('base','posR',posR);
         end
-        plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
+        plot3(posB(:,1),posB(:,2),posB(:,3),'k.','Parent', handles.slicePosMap);
 %         plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
 %         ColorBarlim = caxis;
         caxis([0 100]);
         CB2=colorbar;
         CB2.Color='w';
 %         ColorList=(ColorR./100).*(ColorBarlim(2)-ColorBarlim(1))+ColorBarlim(1)
-        scatter3(posR(:,1),posR(:,2),posR(:,3),500,ColorR,'.');
+        scatter3(posR(:,1),posR(:,2),posR(:,3),500,ColorR,'.', 'Parent', handles.slicePosMap);
         grid on
         axis equal
 
@@ -415,23 +405,24 @@ elseif handles.PlotSelect.Value==2
         axis tight
 
         sK = handles.currentSlice;
-        handles.SliceMap_gLine{1} = plot([RCSegmentation(sK),RCSegmentation(sK)], currentLim, 'g');
-        handles.SliceMap_gLine{2} = plot([RCSegmentation(sK+1),RCSegmentation(sK+1)], currentLim, 'g');
-        handles.SliceMap_gLine{3} = plot3([RCSegmentation(sK),RCSegmentation(sK)], currentLim, [zLim(2),zLim(2)], 'g');
-        handles.SliceMap_gLine{4} = plot3([RCSegmentation(sK+1),RCSegmentation(sK+1)], currentLim, [zLim(2), zLim(2)], 'g');
+        handles.SliceMap_gLine{1} = plot([RCSegmentation(sK),RCSegmentation(sK)], currentLim, 'g', 'Parent', handles.slicePosMap);
+        handles.SliceMap_gLine{2} = plot([RCSegmentation(sK+1),RCSegmentation(sK+1)], currentLim, 'g', 'Parent', handles.slicePosMap);
+        handles.SliceMap_gLine{3} = plot3([RCSegmentation(sK),RCSegmentation(sK)], currentLim, [zLim(2),zLim(2)], 'g', 'Parent', handles.slicePosMap);
+        handles.SliceMap_gLine{4} = plot3([RCSegmentation(sK+1),RCSegmentation(sK+1)], currentLim, [zLim(2), zLim(2)], 'g', 'Parent', handles.slicePosMap);
         if get(handles.CellFinderStay,'Value')==1
             handles=DrawCirclePoint_Special(hObject,handles);
         end
 elseif handles.PlotSelect.Value==3
     currentT =  round( get(handles.sliceSelector,'Value') );
-    axes(handles.slicePosMap);
-    imagesc(handles.currView(:,:,currentT));
-    %TO DO: carefully examine steps to insure each click is 1 and that ends
-    %are valid
+    imshow(handles.currView(:,:,currentT),[50 1000], 'Parent', handles.slicePosMap);
+    pause(0.005);
+    drawnow;
+%     colormap(gca, 'jet');
+%     caxis('auto');
 end
 set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
 
-function handles=plot_slice_maps(handles)
+function handles = plot_slice_maps(handles)
 
 if handles.PlotSelect.Value < 3
     set(handles.load_z_stack, 'Visible', 'off');
@@ -461,7 +452,7 @@ if handles.PlotSelect.Value < 3
         roi_in_slice =logical(roi_in_slice);
     end
 
-    plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off');
+    plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off','Parent',handles.sliceAx);
     if isfield(handles,'DispColor')==0
         ColorR='r';
     else
@@ -472,7 +463,7 @@ if handles.PlotSelect.Value < 3
         assignin('base','ColorRinSlice',ColorR);
     end
     caxis([0 100]);
-    scatter3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),100,ColorR,'.','hittest','off');
+    scatter3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),100,ColorR,'.','hittest','off','Parent',handles.sliceAx);
 
     set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
     grid on
@@ -481,16 +472,15 @@ if handles.PlotSelect.Value < 3
     title(sprintf('Slice %2.0f',sK),'color',[1,1,1]);
 
     handles.sliceAx.ButtonDownFcn = handles.cellClicker;
-else
-    set(handles.load_z_stack, 'Visible', 'on');
+elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
        zLvl = round( get(handles.cellSelector, 'Value') );
-       axes(handles.sliceAx), cla;
-       view(2); %set 2D view
-       imshow(handles.zStack(:,:,zLvl)', 'Parent', gca); 
-       caxis('auto');
-       handles.sliceAx = gca;
-       axis equal
+       axes(handles.sliceAx); cla;
+       imshow(handles.zStack(:,:,zLvl), [50, 1000], 'Parent', handles.sliceAx); 
+       drawnow;
+       pause(0.005);
+%        handles.sliceAx = gca;
+%        axis equal
     end
 end
 
@@ -556,12 +546,13 @@ function sliceSelector_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles=guidata(hObject);
+handles.calling_function = 'sliceSelector';
 handles.currentSlice = round( get(hObject,'Value') );
 % round( get(hObject,'Value') );
 % handles.currentSlice 
 % min=get(hObject,'Min')
 % max=get(hObject,'Max')
-handles=plot_slice_maps(handles);
+handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles); 
 guidata(hObject,handles);
@@ -587,11 +578,13 @@ function handles = cellSelector_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
+handles.calling_function = 'cellSelector';
+
 if handles.PlotSelect.Value == 3
     plot_slice_maps(handles);
 else
-handles.cellSelect = round( get(hObject,'Value') );
-handles = plot_fts_in_slice(handles);
+    handles.cellSelect = round( get(hObject,'Value') );
+    handles = plot_fts_in_slice(handles);
 end
 guidata(hObject,handles);
 % Hints: get(hObject,'Value') returns position of slider
@@ -1549,6 +1542,15 @@ function PlotSelect_Callback(hObject, eventdata, handles)
 handles=guidata(hObject);
 %rescale sliceSelector and cellSelector to accomdate differing functions. 
 handles = reset_slider_handles(handles);
+
+if get(hObject, 'Value') < 3
+    axes(handles.sliceAx); view(3);
+    set(handles.load_z_stack, 'Visible', 'off');
+else
+    axes(handles.sliceAx); view(2);
+    set(handles.load_z_stack, 'Visible', 'on');
+end
+
 handles = plot_pos_maps(handles);
 plot_slice_maps(handles);
 guidata(hObject, handles);
@@ -2398,6 +2400,7 @@ function handles = reset_slider_handles(handles)
             newValue = round(handles.sliceSelector.Max/2);
         end
         handles.sliceSelector.Value = newValue;
+        handles.currentSlice = newValue;
         
         handles.inSlice = findInSlice(handles);
         inSlice = handles.inSlice;
