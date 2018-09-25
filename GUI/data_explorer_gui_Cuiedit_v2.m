@@ -22,7 +22,7 @@ function varargout = data_explorer_gui_Cuiedit_v2(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui_Cuiedit_v2
 
-% Last Modified by GUIDE v2.5 24-Sep-2018 15:51:31
+% Last Modified by GUIDE v2.5 25-Sep-2018 12:09:13
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -124,7 +124,7 @@ else
     handles.roi=[];
     handles.roi.name = 'default';
     handles.roi.members = ones(size(spPos,1),1,'logical');
-    handles.roi.ROIcellNo = [1:size(spPos,1)]';
+%     handles.roi.ROIcellNo = [1:size(spPos,1)]';
     handles = display_roiListbox(handles);
     update_roiMasterList(handles);
 end
@@ -890,8 +890,7 @@ function ExportROI_Callback(hObject, eventdata, handles)
 roi = handles.roi;
 [f,path] = uiputfile('roi.mat');
 save([path,f],'roi');
-%hint: roi struct has fields members (logical), name (string) and ROIcellNo
-%(int)
+%hint: roi struct has fields members (logical), name (string)
 
 % --- Executes on button press in LoadROI.
 function LoadROI_Callback(hObject, eventdata, handles)
@@ -903,12 +902,9 @@ load([path,f]);
 if ~exist('roi','var')
     warning('ROIs must be saved in the variable roi')
 end
-% handles.roi=[];
-handles.roi = [handles.roi roi]; %concatenate ROIs together
+handles = update_roi(handles, roi, 'add');
 assignin('base','roi',handles.roi)
-% set(handles.roiListbox,'String',num2cell(find(handles.roi(end).members)));
 update_roiMasterList(handles);
-handles.roiListbox.Max = sum(handles.roi(end).members);
 handles.roiMaster.Value = numel(handles.roi);
 handles = display_roiListbox(handles);
 guidata(hObject,handles);
@@ -942,9 +938,10 @@ function exportSpots_Callback(hObject, eventdata, handles)
 % hObject    handle to exportSpots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-pxyz = handles.spPos(find(handles.roi(handles.roiMaster.Value(1)).members),:);
+curr_roi = handles.roiMaster.Value(1);
+pxyz = handles.spPos(handles.roi(curr_roi).members,:);
 pxyz(:,4) = 0;
-sH = MakeImarisSpots(pxyz,[1,0,0,0],'ROI',handles.im);
+sH = MakeImarisSpots(pxyz,[1,0,0,0],handles.roi(curr_roi).name,handles.im);
 celldiameters = repmat([5,5,7],size(pxyz,1),1);
 sH.SetRadiiXYZ(celldiameters./2);
 
@@ -954,6 +951,8 @@ function im_importSpots_Callback(hObject, eventdata, handles)
 % hObject    handle to im_importSpots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+
 objNames = CheckObjects(handles.im,'Spots');
 [indx,tf] = listdlg('ListString', objNames(:,1),'SelectionMode','single','PromptString','Select Imaris Spots to Import to ROI');
 objSelected = objNames{indx,2};
@@ -969,8 +968,7 @@ roi.members = labelCells;
 roi.name = objNames{indx,1};
 % handles.roi = labelCells;
 handles = update_roi(handles, roi,'add');
-% handles = display_roiListbox(handles, roi.name);
-
+handles = display_roiListbox(handles);
 guidata(hObject,handles);
 
 function handles = display_roiListbox(handles)
@@ -984,6 +982,8 @@ handles.roiListbox.Max = sum(handles.roi(roiIdx).members);
 % handles.roiListbox.Value = 1;
 if handles.roiListbox.Value > handles.roiListbox.Max
     handles.roiListbox.Value = handles.roiListbox.Max;
+elseif handles.roiListbox.Value < 1
+    handles.roiListbox.Value = 1;
 end
 
 function update_roiMasterList(handles)
@@ -991,7 +991,7 @@ function update_roiMasterList(handles)
 set(handles.roiMaster,'String', {handles.roi.name});
 handles.roiMaster.Max = numel(handles.roi);
 if isempty(handles.roiMaster.Value) || handles.roiMaster.Value > handles.roiMaster.Max
-    handles.roiMaster.Value = 1;
+    handles.roiMaster.Value = handles.roiMaster.Max;
 end
 
 function handles = update_roi(handles, roi, command)
@@ -1002,7 +1002,11 @@ roistruct = handles.roi;
 
 if strcmp(command,'add')
     roistruct(end+1) = roi;
+elseif strcmp(command, 'delete')
+    current_roi = handles.roiMaster.Value;
+    roistruct(current_roi) = [];
 end
+
 handles.roi = roistruct;
 update_roiMasterList(handles);
 
@@ -1570,7 +1574,8 @@ function CellNoToAdd_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of CellNoToAdd as a double
 
 current_roi = handles.roiMaster.Value;
-handles.CellNoToAdd=str2double(get(hObject,'String'));
+% handles.CellNoToAdd=str2double(get(hObject,'String'));
+handles.CellNoToAdd=eval( get(hObject, 'String') );
 handles.roi(current_roi).members(handles.CellNoToAdd) = 1;
 handles = display_roiListbox(handles);
 guidata(hObject,handles);
@@ -1702,9 +1707,9 @@ function CheckROIInRawData_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 current_roi = handles.roiMaster.Value;
-roi = find(handles.roi(current_roi).members);
+roi_Idx = find(handles.roi(current_roi).members);
 assignin('base','roi',roi);
-genFIJI_ROIs_CuiEdited(handles.spPos(roi,:), roi, handles.spRadiiXYZ(roi,:));
+genFIJI_ROIs_GUI(handles.spPos(roi_Idx,:), roi_Idx, handles.spRadiiXYZ(roi_Idx,:));
 
 
 % --- Executes on selection change in CorrTypeSelect.
@@ -2143,18 +2148,16 @@ end
 %note: keep everything inside the if/elif statements to prevent weird
 %selection behavior. 
 if strcmp(eventdata.Character,'a')%add ROI Master
-    answer0=inputdlg('What is the name of the ROI Category you want?');
+    answer0=inputdlg('What is the name of the new ROI?');
     newROIname=answer0{1,1};
-    newROISize=size(handles.roi,2)+1;
-    handles.roi(newROISize).name= newROIname;
-    handles.roi(newROISize).members=zeros(size(handles.spPos,1),1);
-    handles.roi(newROISize).members=logical(handles.roi(newROISize).members);
-    set(handles.roiMaster,'String',{handles.roi.name});
+%     newROISize=size(handles.roi,2)+1;
+    roi.name= newROIname;
+    roi.members=zeros(size(handles.spPos,1),1, 'logical');
+    handles = update_roi(handles, roi, 'add');
     assignin('base','roi',handles.roi);
 
 elseif strcmp(eventdata.Key, 'delete')
-    handles.roi(current_roi) = [];
-    update_roiMasterList(handles);
+    handles = update_roi(handles, [], 'delete');
     handles = display_roiListbox(handles);
     
 elseif strcmp(eventdata.Character,'v')
@@ -2244,7 +2247,9 @@ elseif strcmp(eventdata.Character,'0')
     handles.DispColor(roi)=0;
     assignin('base','DispColor',handles.DispColor);
 end
-    guidata(hObject,handles);
+update_roiMasterList(handles);
+handles = display_roiListbox(handles);
+guidata(hObject,handles);
 
 function [htmlname]=regexprep(Entry)
 htmlname = sprintf('<HTML><BODY bgcolor="%s">%s', 'red', Entry);
@@ -2276,33 +2281,33 @@ handles = plot_pos_maps(handles);
 handles = plot_slice_maps(handles);
 handles = plot_fts_in_slice(handles);
 
-
-% --- Executes on button press in ExportROIData.
-function ExportROIData_Callback(hObject, eventdata, handles)
-% hObject    handle to ExportROIData (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-current_roi = handles.roiMaster.Value;
-roi = find(handles.roi(current_roi).members);
-
-% CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
-% assignin('base','CurrentRoiList',CurrentRoi);
-spPos=handles.spPos(roi,:);
-fluorescence_time_series=handles.fts(roi,:);
-spRadiiXYZ=handles.spRadiiXYZ(roi,:);
-% cellSegmentation=handles.cellSegmentation(:,roi);
-Sc=handles.Sc;
-ROIList=roi;
-
-if isfield(handles,'dFF')
-    dFF=handles.dFF(roi,:);
-end
-[f2,path2] = uiputfile('ROIData.mat');
-if isfield(handles,'dFF')==0
-    save([path2,f2],'ROIList','spPos','fluorescence_time_series','spRadiiXYZ','Sc');
-else
-    save([path2,f2],'ROIList','spPos','fluorescence_time_series','dFF','spRadiiXYZ','Sc');
-end
+% replicates Export button. deleted by Dawnis 09/25/2018
+% % --- Executes on button press in ExportROIData.
+% function ExportROIData_Callback(hObject, eventdata, handles)
+% % hObject    handle to ExportROIData (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% current_roi = handles.roiMaster.Value;
+% roi = find(handles.roi(current_roi).members);
+% 
+% % CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
+% % assignin('base','CurrentRoiList',CurrentRoi);
+% spPos=handles.spPos(roi,:);
+% fluorescence_time_series=handles.fts(roi,:);
+% spRadiiXYZ=handles.spRadiiXYZ(roi,:);
+% % cellSegmentation=handles.cellSegmentation(:,roi);
+% Sc=handles.Sc;
+% ROIList=roi;
+% 
+% if isfield(handles,'dFF')
+%     dFF=handles.dFF(roi,:);
+% end
+% [f2,path2] = uiputfile('ROIData.mat');
+% if isfield(handles,'dFF')==0
+%     save([path2,f2],'ROIList','spPos','fluorescence_time_series','spRadiiXYZ','Sc');
+% else
+%     save([path2,f2],'ROIList','spPos','fluorescence_time_series','dFF','spRadiiXYZ','Sc');
+% end
 
 
 % --- Executes on button press in RandColor.
@@ -2561,3 +2566,4 @@ inZ = round( roi_z/handles.microns_per_z ) == zLvl;
 handles.roiListbox.Value = find(inZ);
 handles.cell_roi_list = [];
 guidata(hObject, handles);
+
