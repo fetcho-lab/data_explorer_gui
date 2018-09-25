@@ -750,7 +750,7 @@ function roiListbox_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from roiListbox
 % CurrentString=get(handles.roiListbox,'String');
 handles.SelectedROIListNo=get(hObject,'Value');
-roi_members_cell_no = find(handles.roi.members);
+roi_members_cell_no = find(handles.roi(handles.roiMaster.Value(1)).members);
 % assignin('base','SelectedROIListNo',handles.SelectedROIListNo);
 % handles.SelectedROI=str2num(CurrentString{get(hObject,'Value')});
 handles.SelectedROI = roi_members_cell_no( get(hObject, 'Value') );
@@ -831,11 +831,11 @@ if strcmp(eventdata.Character,'a')
     handles = display_roiListbox(handles);
     set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
     guidata(hObject,handles);
-elseif strcmp(eventdata.Character,'d')
+elseif strcmp(eventdata.Key,'delete')
     %     handles.roi(handles.roiListbox.Value) = [];
     current_roi = handles.roiMaster.Value;
     roi = find(handles.roi(current_roi).members);
-    toDeleteCell = roi(get(handles.roiListbox,'Value') )
+    toDeleteCell = roi(get(handles.roiListbox,'Value') );
 %     toDeleteCell = handles.roiListbox.String( handles.roiListbox.Value);
 %     toDelete = str2num(toDeleteCell{1});
     handles.roi(current_roi).members(toDeleteCell) = 0;
@@ -975,7 +975,10 @@ roiIdx =get(handles.roiMaster,'Value');
 % assignin('base','currentmembers',handles.roi(roiIdx).members);
 set(handles.roiListbox,'String',num2cell(find(handles.roi(roiIdx).members)))
 handles.roiListbox.Max = sum(handles.roi(roiIdx).members);
-handles.roiListbox.Value = 1;
+% handles.roiListbox.Value = 1;
+if handles.roiListbox.Value > handles.roiListbox.Max
+    handles.roiListbox.Value = handles.roiListbox.Max;
+end
 
 function update_roiMasterList(handles)
 %updates the roiMaster listbox with current information
@@ -2126,11 +2129,11 @@ function roiMaster_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-current_roi = handles.roiMaster.Value
+current_roi = handles.roiMaster.Value;
 if isfield(handles,'DispColor')==0
     handles.DispColor=ones(size(handles.fts,1),1);
 end
-    guidata(hObject,handles);
+    
 %note: keep everything inside the if/elif statements to prevent weird
 %selection behavior. 
 if strcmp(eventdata.Character,'a')%add ROI Master
@@ -2142,6 +2145,12 @@ if strcmp(eventdata.Character,'a')%add ROI Master
     handles.roi(newROISize).members=logical(handles.roi(newROISize).members);
     set(handles.roiMaster,'String',{handles.roi.name});
     assignin('base','roi',handles.roi);
+
+elseif strcmp(eventdata.Key, 'delete')
+    handles.roi(current_roi) = [];
+    update_roiMasterList(handles);
+    handles = display_roiListbox(handles);
+    
 elseif strcmp(eventdata.Character,'v')
     answer1=inputdlg('What color do you want this ROI group to be plotted? please input 0 to 100 digit.');
 
