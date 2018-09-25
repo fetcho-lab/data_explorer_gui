@@ -72,6 +72,10 @@ handles.currView = [];
 handles.zStack = [];
 handles.calling_function = 'None';
 
+handles.sPMap_Ax_roi = [];
+handles.cell_roi_list = [];
+handles.posmap_img = [];
+
 handles.im=[];
 
 handles.timeListener=addlistener(handles.sliceSelector,'ContinuousValueChange',@sliceSelector_Callback);
@@ -417,32 +421,34 @@ elseif handles.PlotSelect.Value==2
         if get(handles.CellFinderStay,'Value')==1
             handles=DrawCirclePoint_Special(hObject,handles);
         end
-elseif handles.PlotSelect.Value==3
+elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
     currentT =  round( get(handles.sliceSelector,'Value') );
     climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
-    if isnan(climz(1))
-       imshow(handles.currView(:,:,currentT), [50 1000], 'Parent', handles.slicePosMap);
-       caxis(handles.slicePosMap, 'auto');
-       climz = get(handles.slicePosMap, 'CLim');
-       handles.caxis0.String = num2str(climz(1), '%4.0f');
-       handles.caxis1.String = num2str(climz(2), '%4.0f');       
-    else
-        imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
-    end
     
-    if ~isfield(handles,'cell_roi_list') || isempty(handles.cell_roi_list)
+    if isnan(climz(1)) 
+       frame1 = handles.currView(:,:,1);
+       climz = [prctile(frame1(:), 5) prctile(frame1(:), 99)];
+       handles.caxis0.String = num2str(climz(1), '%4.0f');
+       handles.caxis1.String = num2str(climz(2), '%4.0f');   
+    end
+
+    cla(handles.slicePosMap);
+    handles.posmap_img = imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
+
+    if isempty(handles.cell_roi_list) && sum(handles.roi.members) > 0
         roi_members_cell_no = find(handles.roi.members);
         handles.cell_roi_list = roi_members_cell_no(handles.roiListbox.Value);
     end
     
-    if length(handles.cell_roi_list) > 0
+    if numel(handles.cell_roi_list) > 0 
         cxy = handles.spPos(handles.cell_roi_list,1:2)/handles.Sc(1,1);
         rxy = handles.spRadiiXYZ(handles.cell_roi_list,1)/handles.Sc(1,1);
         handles.sPMap_Ax_roi = viscircles(handles.slicePosMap, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
     end
+    
     title(handles.slicePosMap,sprintf('Stack %04.0f', currentT));
-    pause(0.005);
     drawnow;
+    pause(0.005);
 %     colormap(gca, 'jet');
 %     caxis('auto');
 end
@@ -508,7 +514,6 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
        zLvl = round( get(handles.cellSelector, 'Value') );
        climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
-%        axes(handles.sliceAx); cla;
     if isnan(climz(1))
        imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
        caxis(handles.sliceAx, 'auto');
@@ -516,6 +521,7 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
        handles.caxis0.String = num2str(climz(1), '%4.0f');
        handles.caxis1.String = num2str(climz(2), '%4.0f');       
     else
+       cla(handles.sliceAx);
        imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
     end
        title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
@@ -1602,10 +1608,15 @@ if get(hObject, 'Value') < 3
     colormap(handles.slicePosMap, 'jet')
 else
     axes(handles.sliceAx); view(2); cla;
+    axes(handles.slicePosMap); cla;
     set(handles.load_z_stack, 'Visible', 'on');
     set(handles.throw_roi_button, 'Visible', 'on');
     handles.caxis0.String = '';
     handles.caxis1.String = '';
+    handles.sPMap_Ax_roi = [];
+    handles.cell_roi_list = [];
+    handles.posmap_img = [];
+    
 end
 
 handles = plot_pos_maps(handles);
