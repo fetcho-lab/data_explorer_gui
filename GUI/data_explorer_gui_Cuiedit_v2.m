@@ -278,7 +278,8 @@ if isfield(handles,'CirclePointinSlice')
     delete(handles.CirclePointinSlice);
 end
 
-handles.CirclePointinSlice=plot3(handles.spPos(handles.CellNoToFindinSlice,1), handles.spPos(handles.CellNoToFindinSlice,2),handles.spPos(handles.CellNoToFindinSlice,3),'bo','linewidth',3,'Markersize',10,'Parent',handles.sliceAx);
+handles.CirclePointinSlice=plot3(handles.spPos(handles.CellNoToFindinSlice,1), handles.spPos(handles.CellNoToFindinSlice,2),handles.spPos(handles.CellNoToFindinSlice,3),'bo','linewidth',3,'Markersize',10,'hittest', 'off', 'Parent',handles.sliceAx);
+% set(handles.CirclePointinSlice, 'ButtonDownFcn', handles.sliceAx.ButtonDownFcn);
 % guidata(hObject,handles);
 % assignin('base','circinslice',handles.CirclePointinSlice);
 
@@ -436,8 +437,8 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
     cla(handles.slicePosMap);
     handles.posmap_img = imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
 
-    if isempty(handles.cell_roi_list) && sum(handles.roi.members) > 0
-        roi_members_cell_no = find(handles.roi.members);
+    if isempty(handles.cell_roi_list) && sum(handles.roi(handles.roiMaster.Value(1)).members) > 0
+        roi_members_cell_no = find(handles.roi(handles.roiMaster.Value(1)).members);
         handles.cell_roi_list = roi_members_cell_no(handles.roiListbox.Value);
     end
     
@@ -461,7 +462,7 @@ if handles.PlotSelect.Value < 3
     set(handles.load_z_stack, 'Visible', 'off');
     set(handles.sliceAx,'Visible','on');
     handles.cellClicker = handles.sliceAx.ButtonDownFcn;
-    axes(handles.sliceAx), cla
+    cla(handles.sliceAx);
     sK = handles.currentSlice;
     % RCSegmentation = handles.linearRange;
     % all_inSlice = handles.spPos(:,1) >  RCSegmentation(sK-1) & handles.spPos(:,1) < RCSegmentation(sK);
@@ -496,20 +497,25 @@ if handles.PlotSelect.Value < 3
         assignin('base','ColorRinSlice',ColorR);
     end
     
-    hold(handles.sliceAx,'on');
-    plot3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),'.','color',[1 0 0],'hittest','off','Parent',handles.sliceAx);
-    plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off','Parent',handles.sliceAx);
-    hold(handles.sliceAx,'off');
+%     hold(handles.sliceAx,'on'); %messing with hold messes up clicking on
+%     cells for some reason.
+    h1 = plot3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),'.','color',[1 0 0],'hittest','off','Parent',handles.sliceAx);
+    h2 = plot3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),'.','color',[0.2 0.2 0.2],'hittest','off','Parent',handles.sliceAx);
+%     h1=scatter3(allDots(roi_in_slice,1),allDots(roi_in_slice,2),allDots(roi_in_slice,3),100, [1 0 0],'.','hittest','off','Parent',handles.sliceAx);
+%     h2=scatter3(allDots(~roi_in_slice,1),allDots(~roi_in_slice,2),allDots(~roi_in_slice,3),100, [0.2 0.2 0.2],'.','hittest','off','Parent',handles.sliceAx);
+%     hold(handles.sliceAx,'off');
 %     caxis([0 100]);
+%     set(h1, 'ButtownDownFcn', handles.sliceAx.ButtonDownFcn);
+%     set(h2, 'ButtownDownFcn', handles.sliceAx.ButtonDownFcn);
     
-
-    set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
-    grid on
-    axis equal
-    view(90,0);
-    title(sprintf('Slice %2.0f',sK),'color',[1,1,1]);
+    set(handles.sliceAx,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
+    grid(handles.sliceAx, 'on');
+    axis(handles.sliceAx, 'equal')
+    view(handles.sliceAx, 90,0);
+    title(handles.sliceAx, sprintf('Slice %2.0f',sK),'color',[1,1,1]);
 
     handles.sliceAx.ButtonDownFcn = handles.cellClicker;
+    set(handles.sliceAx,'hittest','on');
     
 elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
@@ -527,7 +533,7 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
     end
        title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
        inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
-       roi_in_slice = handles.roi.members & inZ;
+       roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
        if sum(roi_in_slice) > 0
            cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
            rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
@@ -936,7 +942,7 @@ function exportSpots_Callback(hObject, eventdata, handles)
 % hObject    handle to exportSpots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-pxyz = handles.spPos(find(handles.roi.members),:);
+pxyz = handles.spPos(find(handles.roi(handles.roiMaster.Value(1)).members),:);
 pxyz(:,4) = 0;
 sH = MakeImarisSpots(pxyz,[1,0,0,0],'ROI',handles.im);
 celldiameters = repmat([5,5,7],size(pxyz,1),1);
@@ -1188,7 +1194,7 @@ answer1 = inputdlg('What data do you want to calculate correlation with? Type df
 
 CurrentROIString=get(handles.roiListbox,'String');
 % assignin('base','CurrentROIString',CurrentROIString);
-handles.CurrentRoiList=find(handles.roi.members);
+handles.CurrentRoiList=find(handles.roi(handles.roiMaster.Value(1)).members);
 % assignin('base','CurrentRoiList',handles.CurrentRoiList);
 
 
@@ -1408,7 +1414,7 @@ roi = find(handles.roi(current_roi).members);
 selected_cells = roi(get(handles.roiListbox,'Value') );
 
 
-% CurrentRoi=find(handles.roi.members);
+% CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
 % assignin('base','CurrentRoiList',CurrentRoi);
 ROIMeanFluo=mean(handles.fts(selected_cells,:),1);
 if isfield(handles,'dFF')
@@ -2279,7 +2285,7 @@ function ExportROIData_Callback(hObject, eventdata, handles)
 current_roi = handles.roiMaster.Value;
 roi = find(handles.roi(current_roi).members);
 
-% CurrentRoi=find(handles.roi.members);
+% CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
 % assignin('base','CurrentRoiList',CurrentRoi);
 spPos=handles.spPos(roi,:);
 fluorescence_time_series=handles.fts(roi,:);
@@ -2550,7 +2556,7 @@ function throw_roi_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 zLvl = round( get(handles.cellSelector, 'Value') );
-roi_z = handles.spPos(handles.roi.members,3);
+roi_z = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,3);
 inZ = round( roi_z/handles.microns_per_z ) == zLvl;
 handles.roiListbox.Value = find(inZ);
 handles.cell_roi_list = [];
