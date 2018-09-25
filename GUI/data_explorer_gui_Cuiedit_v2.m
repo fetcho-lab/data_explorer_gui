@@ -365,46 +365,39 @@ if handles.PlotSelect.Value==1
         handles=DrawCirclePoint_Special(hObject,handles);
     end
 elseif handles.PlotSelect.Value==2
-    ShowAllROI=get(handles.ShowAllROICheck,'Value');
         current_roi = handles.roiMaster.Value;    
-        axes(handles.slicePosMap), cla
-        hold on
+        cla(handles.slicePosMap);
+
         posB = handles.spPos(handles.labelVector,:);
-        if islogical(handles.roi(current_roi).members)==0
-            handles.roi(current_roi).members=logical(handles.roi(current_roi).members);
-        end
-        
-        if ShowAllROI==0
-            CellNoToDisp=find(handles.roi(current_roi).members==1);
-        elseif ShowAllROI==1
-            CellNoToDisp=[];
-            for i=1:size(handles.roi,2)
-                CellNoToDisp=union(CellNoToDisp,find(handles.roi(i).members));
-            end
-        end
-        assignin('base','CellNoToDisp',CellNoToDisp);
-        assignin('base','spPos',handles.spPos);
-        posR = handles.spPos(CellNoToDisp,:);
-        if isfield(handles,'DispColor')==0
-            ColorR='r';
-        else
-            ColorR =handles.DispColor(CellNoToDisp,:);
-            assignin('base','ColorR',ColorR);
-            assignin('base','posR',posR);
-        end
+        poz = handles.spPos;
+%         assignin('base','CellNoToDisp',CellNoToDisp);
+%         assignin('base','spPos',handles.spPos);
+%         poz = handles.spPos(CellNoToDisp,:);
+%         if isfield(handles,'DispColor')==0
+%             ColorR='r';
+%         else
+%             ColorR =handles.DispColor(CellNoToDisp,:);
+%             assignin('base','ColorR',ColorR);
+%             assignin('base','poz',poz);
+%         end
         plot3(posB(:,1),posB(:,2),posB(:,3),'k.','Parent', handles.slicePosMap);
-%         plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
+%         plot3(poz(:,1),poz(:,2),poz(:,3),'ro', 'markerfacecolor','r','markersize',3);
 %         ColorBarlim = caxis;
         caxis([0 100]);
-        CB2=colorbar;
-        CB2.Color='w';
+%         CB2=colorbar;
+%         CB2.Color='w';
 %         ColorList=(ColorR./100).*(ColorBarlim(2)-ColorBarlim(1))+ColorBarlim(1)
-        scatter3(posR(:,1),posR(:,2),posR(:,3),500,ColorR,'.', 'Parent', handles.slicePosMap);
-        grid on
-        axis equal
 
-        currentLim = get(gca,'YLim');
-        zLim = get(gca,'ZLim');
+        cmapz = hsv(handles.roiMaster.Max);
+        for r=1:numel(current_roi)
+            mberz = handles.roi(current_roi(r)).members;
+            scatter3(poz(mberz,1),poz(mberz,2),poz(mberz,3),500,cmapz(current_roi(r),:),'.', 'Parent', handles.slicePosMap);
+        end
+        grid(handles.slicePosMap, 'on');
+        axis(handles.slicePosMap, 'equal');
+
+        currentLim = get(handles.slicePosMap,'YLim');
+        zLim = get(handles.slicePosMap,'ZLim');
         RCSegmentation = handles.linearRange;
 
         if isfield(handles,'SliceMap_gLine')
@@ -471,18 +464,21 @@ if handles.PlotSelect.Value < 3
     handles.inSlice = all_inSlice; 
 
     current_roi = get(handles.roiMaster,'Value');
-
-    if get(handles.ShowAllROICheck,'Value')==0
-        roi_in_slice = handles.roi(current_roi).members(all_inSlice);
-    elseif get(handles.ShowAllROICheck,'Value')==1
-        current_roi_cells=handles.roi(1).members;
-        for i=1:size(handles.roi,2)
-            current_roi_cells=current_roi_cells+handles.roi(i).members;
-        end
-        current_roi_cells(current_roi_cells>0)=1;
-        roi_in_slice = current_roi_cells(all_inSlice);
-    end
+    current_roi = current_roi(1);
     
+%     if get(handles.ShowAllROICheck,'Value')==0
+%         roi_in_slice = handles.roi(current_roi).members(all_inSlice);
+%     elseif get(handles.ShowAllROICheck,'Value')==1
+%         current_roi_cells=handles.roi(1).members;
+%         for i=1:size(handles.roi,2)
+%             current_roi_cells=current_roi_cells+handles.roi(i).members;
+%         end
+%         current_roi_cells(current_roi_cells>0)=1;
+%         roi_in_slice = current_roi_cells(all_inSlice);
+%     end
+     
+    roi_in_slice = handles.roi(current_roi).members(all_inSlice);
+     
     if islogical(roi_in_slice)==0
         roi_in_slice =logical(roi_in_slice);
     end
@@ -827,8 +823,9 @@ function roiListbox_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
 current_roi = handles.roiMaster.Value;
-
+current_roi = current_roi(1);
 %note: keep everything inside the if/elif statements to prevent weird
 %selection behavior. 
 if strcmp(eventdata.Character,'a')
@@ -836,7 +833,6 @@ if strcmp(eventdata.Character,'a')
     handles.roi(current_roi).members(handles.cellSelect_idx) = 1;
     handles = display_roiListbox(handles);
     set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
-    guidata(hObject,handles);
 elseif strcmp(eventdata.Key,'delete')
     %     handles.roi(handles.roiListbox.Value) = [];
     current_roi = handles.roiMaster.Value;
@@ -878,8 +874,8 @@ elseif strcmp(eventdata.Character,'f')
     axes(handles.slicePosMap);
     handles=DrawCirclePoint(handles);
     
-    guidata(hObject,handles);
 end
+guidata(hObject,handles);
 
 
 % --- Executes on button press in ExportROI.
@@ -975,14 +971,15 @@ function handles = display_roiListbox(handles)
 %displays current members of roi listed by roiname
 % disp( roiname );
 % roiIdx = strcmp({handles.roi.name}, roiname);
-roiIdx =get(handles.roiMaster,'Value');
+roiIdx = get(handles.roiMaster,'Value');
+roiIdx = roiIdx(1);
 % assignin('base','currentmembers',handles.roi(roiIdx).members);
 set(handles.roiListbox,'String',num2cell(find(handles.roi(roiIdx).members)))
 handles.roiListbox.Max = sum(handles.roi(roiIdx).members);
 % handles.roiListbox.Value = 1;
 if handles.roiListbox.Value > handles.roiListbox.Max
     handles.roiListbox.Value = handles.roiListbox.Max;
-elseif handles.roiListbox.Value < 1
+elseif isempty(handles.roiListbox.Value) || handles.roiListbox.Value < 1 
     handles.roiListbox.Value = 1;
 end
 
@@ -990,7 +987,7 @@ function update_roiMasterList(handles)
 %updates the roiMaster listbox with current information
 set(handles.roiMaster,'String', {handles.roi.name});
 handles.roiMaster.Max = numel(handles.roi);
-if isempty(handles.roiMaster.Value) || handles.roiMaster.Value > handles.roiMaster.Max
+if isempty(handles.roiMaster.Value(1)) || handles.roiMaster.Value(end) > handles.roiMaster.Max
     handles.roiMaster.Value = handles.roiMaster.Max;
 end
 
@@ -2120,17 +2117,17 @@ function Untitled_3_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on button press in ShowAllROICheck.
-function ShowAllROICheck_Callback(hObject, eventdata, handles)
-% hObject    handle to ShowAllROICheck (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of ShowAllROICheck
-handles = plot_pos_maps(handles);
-handles = plot_slice_maps(handles);
-handles = plot_fts_in_slice(handles);
+% 
+% % --- Executes on button press in ShowAllROICheck.
+% function ShowAllROICheck_Callback(hObject, eventdata, handles)
+% % hObject    handle to ShowAllROICheck (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hint: get(hObject,'Value') returns toggle state of ShowAllROICheck
+% handles = plot_pos_maps(handles);
+% handles = plot_slice_maps(handles);
+% handles = plot_fts_in_slice(handles);
 
 % --- Executes on key press with focus on roiMaster and none of its controls.
 function roiMaster_KeyPressFcn(hObject, eventdata, handles)
@@ -2272,14 +2269,14 @@ set(handles.StimTSPlot,'XColor',[1 1 1]);
 guidata(hObject,handles);
 
 
-% --- Executes on button press in ColorSelection.
-function ColorSelection_Callback(hObject, eventdata, handles)
-% hObject    handle to ColorSelection (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles = plot_pos_maps(handles);
-handles = plot_slice_maps(handles);
-handles = plot_fts_in_slice(handles);
+% % --- Executes on button press in ColorSelection.
+% function ColorSelection_Callback(hObject, eventdata, handles)
+% % hObject    handle to ColorSelection (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% handles = plot_pos_maps(handles);
+% handles = plot_slice_maps(handles);
+% handles = plot_fts_in_slice(handles);
 
 % replicates Export button. deleted by Dawnis 09/25/2018
 % % --- Executes on button press in ExportROIData.
