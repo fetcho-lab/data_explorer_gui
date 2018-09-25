@@ -119,12 +119,13 @@ end
 
 if exist('roi','var')
     handles.roi=roi;
-    handles = display_roiListbox(handles, roi(1).name);
+    handles = display_roiListbox(handles);
 else
     handles.roi=[];
     handles.roi.name = 'default';
-    handles.roi.members = zeros(size(spPos,1),1,'logical');
-    handles = display_roiListbox(handles, 'default');
+    handles.roi.members = ones(size(spPos,1),1,'logical');
+    handles.roi.ROIcellNo = [1:size(spPos,1)]';
+    handles = display_roiListbox(handles);
     update_roiMasterList(handles);
 end
 
@@ -747,10 +748,12 @@ function roiListbox_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns roiListbox contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from roiListbox
-CurrentString=get(handles.roiListbox,'String');
+% CurrentString=get(handles.roiListbox,'String');
 handles.SelectedROIListNo=get(hObject,'Value');
+roi_members_cell_no = find(handles.roi.members);
 % assignin('base','SelectedROIListNo',handles.SelectedROIListNo);
-handles.SelectedROI=str2num(CurrentString{get(hObject,'Value')});
+% handles.SelectedROI=str2num(CurrentString{get(hObject,'Value')});
+handles.SelectedROI = roi_members_cell_no( get(hObject, 'Value') );
 
 % roiIdx = strcmp({handles.roi.name}, roiname);
 % find(handles.roi(roiIdx).members))
@@ -825,7 +828,7 @@ current_roi = handles.roiMaster.Value;
 if strcmp(eventdata.Character,'a')
     %     handles.roi = unique( [handles.roi, handles.cellSelect_idx] );
     handles.roi(current_roi).members(handles.cellSelect_idx) = 1;
-    handles = display_roiListbox(handles, handles.roi(current_roi).name);
+    handles = display_roiListbox(handles);
     set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
     guidata(hObject,handles);
 elseif strcmp(eventdata.Character,'d')
@@ -836,7 +839,7 @@ elseif strcmp(eventdata.Character,'d')
 %     toDeleteCell = handles.roiListbox.String( handles.roiListbox.Value);
 %     toDelete = str2num(toDeleteCell{1});
     handles.roi(current_roi).members(toDeleteCell) = 0;
-    handles = display_roiListbox(handles, handles.roi(current_roi).name);
+    handles = display_roiListbox(handles);
     set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
     guidata(hObject,handles);
     
@@ -881,7 +884,7 @@ function ExportROI_Callback(hObject, eventdata, handles)
 roi = handles.roi;
 [f,path] = uiputfile('roi.mat');
 save([path,f],'roi');
-%hint: roi struct has fields members (logical), name (string) and ROICellNo
+%hint: roi struct has fields members (logical), name (string) and ROIcellNo
 %(int)
 
 % --- Executes on button press in LoadROI.
@@ -894,17 +897,14 @@ load([path,f]);
 if ~exist('roi','var')
     warning('ROIs must be saved in the variable roi')
 end
-handles.roi=[];
-handles.roi = roi;
-% set(handles.roiListbox,'String',num2cell(handles.roi))
-% handles.roiListbox.Max = length(handles.roi);
-% handles.roiListbox.Value = 1;
-% guidata(hObject,handles);
+% handles.roi=[];
+handles.roi = [handles.roi roi]; %concatenate ROIs together
 assignin('base','roi',handles.roi)
-set(handles.roiListbox,'String',num2cell(find(handles.roi(1).members)));
-set(handles.roiMaster,'String',{handles.roi.name});
-handles.roiListbox.Max = sum(handles.roi(1).members);
-handles.roiListbox.Value = 1;
+% set(handles.roiListbox,'String',num2cell(find(handles.roi(end).members)));
+update_roiMasterList(handles);
+handles.roiListbox.Max = sum(handles.roi(end).members);
+handles.roiMaster.Value = numel(handles.roi);
+handles = display_roiListbox(handles);
 guidata(hObject,handles);
 
 
@@ -967,9 +967,9 @@ handles = update_roi(handles, roi,'add');
 
 guidata(hObject,handles);
 
-function handles = display_roiListbox(handles, roiname)
+function handles = display_roiListbox(handles)
 %displays current members of roi listed by roiname
-disp( roiname );
+% disp( roiname );
 % roiIdx = strcmp({handles.roi.name}, roiname);
 roiIdx =get(handles.roiMaster,'Value');
 % assignin('base','currentmembers',handles.roi(roiIdx).members);
@@ -1019,52 +1019,56 @@ function roiMaster_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns roiMaster contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from roiMaster
 
-set(handles.CorrCellNoList,'Max',9999999999999,'Min',0);
+% set(handles.CorrCellNoList,'Max',9999999999999,'Min',0);
+handles = guidata(hObject);
 
-handles = display_roiListbox(handles, handles.roi(hObject.Value).name);
+handles = display_roiListbox(handles);
 handles = plot_pos_maps(handles);
 handles = plot_slice_maps(handles);
 handles = plot_fts_in_slice(handles);
 
-axes(handles.dffPlot), cla %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
-% yyaxis left
-hold on
+%WTF IS THIS? TALK TO DAWNIS BEFORE IMPLEMENTING THIS KIND OF MYSTERIOUS
+%CRAP. 09/25/2018
+% axes(handles.dffPlot), cla %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
+% % yyaxis left
+% hold on
+% 
+% CellNoToPlot=find(handles.roi(get(hObject,'Value')).members);
+% if get(handles.raw_trace_selector,'Value')
+%     ftsToPlot=mean(handles.fts(CellNoToPlot,:),1);
+%     plotTraces_GUI(ftsToPlot, 100, 4, handles.dffPlot);
+%     colorbar('off');
+%     ylabel('Intensity - Mean');
+% elseif get(handles.dFF_traces,'Value')
+%     dFFToPlot=mean(handles.dFF(CellNoToPlot,:),1);
+%     plotTraces_GUI(dFFToPlot, 1, 3, handles.dffPlot);
+%     colorbar('off');
+%     ylabel('\Delta F/F');
+% elseif get(handles.heatmap_selector,'Value')
+%     toplot=mean(handles.fts(CellNoToPlot,:),1);
+% %     toplot = handles.fts(cellSelect,:);
+%     toplot = bsxfun(@minus, toplot, median(toplot,2));
+%     imagesc(handles.dffPlot, toplot );
+%     axis tight
+%     CB1=colorbar;  %colorbar('on');
+%     CB1.Color='w';
+%     colormap jet;
+% elseif get(handles.dFF_heatmap,'Value')
+%     toplot=mean(handles.dFF(CellNoToPlot,:),1);
+% %     toplot = handles.dFF(cellSelect,:);
+%     imagesc(handles.dffPlot, toplot );
+%     axis tight
+%     CB1=colorbar;  %colorbar('on');
+%     CB1.Color='w';
+%     colormap jet;
+% end
+% 
+% xlabel('Frames');
+% title('Fluorescence Time Series', 'color', [1 1 1]);
+% set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
+% handles.dffPlot = gca;
 
-CellNoToPlot=find(handles.roi(get(hObject,'Value')).members);
-if get(handles.raw_trace_selector,'Value')
-    ftsToPlot=mean(handles.fts(CellNoToPlot,:),1);
-    plotTraces_GUI(ftsToPlot, 100, 4, handles.dffPlot);
-    colorbar('off');
-    ylabel('Intensity - Mean');
-elseif get(handles.dFF_traces,'Value')
-    dFFToPlot=mean(handles.dFF(CellNoToPlot,:),1);
-    plotTraces_GUI(dFFToPlot, 1, 3, handles.dffPlot);
-    colorbar('off');
-    ylabel('\Delta F/F');
-elseif get(handles.heatmap_selector,'Value')
-    toplot=mean(handles.fts(CellNoToPlot,:),1);
-%     toplot = handles.fts(cellSelect,:);
-    toplot = bsxfun(@minus, toplot, median(toplot,2));
-    imagesc(handles.dffPlot, toplot );
-    axis tight
-    CB1=colorbar;  %colorbar('on');
-    CB1.Color='w';
-    colormap jet;
-elseif get(handles.dFF_heatmap,'Value')
-    toplot=mean(handles.dFF(CellNoToPlot,:),1);
-%     toplot = handles.dFF(cellSelect,:);
-    imagesc(handles.dffPlot, toplot );
-    axis tight
-    CB1=colorbar;  %colorbar('on');
-    CB1.Color='w';
-    colormap jet;
-end
-
-xlabel('Frames');
-title('Fluorescence Time Series', 'color', [1 1 1]);
-set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
-handles.dffPlot = gca;
-
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function uipanel12_CreateFcn(hObject, eventdata, handles)
@@ -1559,7 +1563,7 @@ function CellNoToAdd_Callback(hObject, eventdata, handles)
 current_roi = handles.roiMaster.Value;
 handles.CellNoToAdd=str2double(get(hObject,'String'));
 handles.roi(current_roi).members(handles.CellNoToAdd) = 1;
-handles = display_roiListbox(handles, handles.roi(current_roi).name);
+handles = display_roiListbox(handles);
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -1645,7 +1649,7 @@ function dFF_traces_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of dFF_traces
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handels=plotfts(handles,handles.CellNoToFindinSlice);
+handles=plotfts(handles,handles.CellNoToFindinSlice);
 
 % --- Executes on button press in raw_trace_selector.
 function raw_trace_selector_Callback(hObject, eventdata, handles)
@@ -1656,7 +1660,7 @@ function raw_trace_selector_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of raw_trace_selector
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handels=plotfts(handles,handles.CellNoToFindinSlice);
+handles=plotfts(handles,handles.CellNoToFindinSlice);
 
 
 % --- Executes on button press in heatmap_selector.
@@ -1668,7 +1672,7 @@ function heatmap_selector_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of heatmap_selector
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handels=plotfts(handles,handles.CellNoToFindinSlice);
+handles=plotfts(handles,handles.CellNoToFindinSlice);
 
 % --- Executes on button press in dFF_heatmap.
 function dFF_heatmap_Callback(hObject, eventdata, handles)
@@ -1680,7 +1684,7 @@ function dFF_heatmap_Callback(hObject, eventdata, handles)
 
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handels=plotfts(handles,handles.CellNoToFindinSlice);
+handles=plotfts(handles,handles.CellNoToFindinSlice);
 
 % --- Executes on button press in CheckROIInRawData.
 function CheckROIInRawData_Callback(hObject, eventdata, handles)
@@ -1752,7 +1756,7 @@ if strcmp(eventdata.Character,'a')
     current_roi = handles.roiMaster.Value;
     handles.roi(current_roi).members(handles.SelectedCorrCellNo) = 1;
     AddCellNo=length(handles.SelectedCorrCellNo);
-    handles = display_roiListbox(handles, handles.roi(current_roi).name);
+    handles = display_roiListbox(handles);
     guidata(hObject,handles);    
     set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
 end
@@ -2414,22 +2418,6 @@ tic; handles.currView = readImage([path,fs,file]); toc;
 handles = reset_slider_handles(handles);
 
 guidata(hObject, handles);
-
-% %probably not in fact faster
-% function stackImg = fast_readTiffSTACK(stackImg,tiffName,stackDimsXYT)
-% %fast read of tsView files
-% if ~isequal(size(stackImg),stackDimsXYT)
-%     stackImg = zeros(stackDimsXYT(1),stackDimsXYT(2),stackDimsXYT(3));
-% end
-% tic
-% 
-% stackImg = readImage(tiffName);
-% % parfor k=1:stackDimsXYT(3)
-% % %     tic
-% %     stackImg(:,:,k) = imread(tiffName,'Index',k,'PixelRegion',{[1 stackDimsXYT(1)],[1,stackDimsXYT(2)]});
-% % %     toc
-% % end
-% toc
 
 function handles = reset_slider_handles(handles)
     if handles.PlotSelect.Value == 3
