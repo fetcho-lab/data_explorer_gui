@@ -14,9 +14,16 @@ function fHandle = plotTraces_GUI(traces,spacing,vWindow,ax)
 % end
 
 traces = bsxfun(@minus, traces, median(traces,2));
-plot(ax, bsxfun(@plus,traces,[0:size(traces,1)-1]'*spacing)');
-ylim([-spacing, vWindow*spacing]);
+trace_visualization = bsxfun(@plus,traces,[0:size(traces,1)-1]'*spacing)';
+plot(trace_visualization, 'Parent', ax);
+ymin = min(trace_visualization(:));
+ymax = max(trace_visualization(:));
 
+% ylim([-spacing, vWindow*spacing]);
+set(ax, 'XLim', [1, size(traces,2)])
+set(ax, 'YLim', [ymin, ymax]);
+set(ax, 'XTickMode', 'auto', 'YTickMode', 'auto');
+axis(ax, 'normal');
 % if ~isempty(varargin) && strcmp(varargin{1},'Label')
 %     stack2Label = round(0.05*size(traces,2));
 %     
