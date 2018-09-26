@@ -301,35 +301,61 @@ hold on
 if get(handles.raw_trace_selector,'Value')
     plotTraces_GUI(handles.fts(cellSelect,:), 200, 2, handles.dffPlot);
     colorbar(handles.dffPlot, 'off');
-    ylabel(handles.dffPlot, 'Intensity - Mean');
+    ylabel(handles.dffPlot, 'Intensity - Mean', 'color', 'w');
     traceMean = mean(handles.fts(cellSelect,:),1);
 elseif get(handles.dFF_traces,'Value')
     plotTraces_GUI(handles.dFF(cellSelect,:), 1, 3, handles.dffPlot);
     colorbar(handles.dffPlot, 'off');
-    ylabel(handles.dffPlot, '\Delta F/F');
+    ylabel(handles.dffPlot, '\Delta F/F', 'color', 'w');
     traceMean = mean(handles.dFF(cellSelect,:),1);
 elseif get(handles.heatmap_selector,'Value')
     toplot = handles.fts(cellSelect,:);
     toplot = bsxfun(@minus, toplot, median(toplot,2));
     imagesc(handles.dffPlot, toplot );
     set(handles.dffPlot, 'XTickMode', 'auto', 'YTickMode', 'auto');
-    ylabel(handles.dffPlot, 'Selected Cells');
+    ylabel(handles.dffPlot, 'Selected Cells', 'color', 'w');
     axis(handles.dffPlot, 'tight');
-    colorbar(handles.dffPlot);  %colorbar('on');
+    cb = colorbar('peer', handles.dffPlot);  %colorbar('on');
     colormap(handles.dffPlot, 'jet');
+    
+    for t = 1:numel(cb.TickLabels)
+        cb.TickLabels{t} = ['\color{white}' cb.TickLabels{t}];
+    end
+    
+    for x = 1:numel(handles.dffPlot.XTickLabel)
+        handles.dffPlot.XTickLabel{x} = ['\color{white}' handles.dffPlot.XTickLabel{x}];
+    end
+
+    for y = 1:numel(handles.dffPlot.YTickLabel)
+        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.XTickLabel{y}];
+    end
+
     traceMean = mean(handles.fts(cellSelect,:),1);
 elseif get(handles.dFF_heatmap,'Value')
     toplot = handles.dFF(cellSelect,:);
     imagesc(handles.dffPlot, toplot );
     set(handles.dffPlot, 'XTickMode', 'auto', 'YTickMode', 'auto');
-    ylabel(handles.dffPlot, 'Selected Cells');
+    ylabel(handles.dffPlot, 'Selected Cells', 'color', 'w');
     axis(handles.dffPlot, 'tight');
-    colorbar(handles.dffPlot);  %colorbar('on');
+    cb = colorbar('peer', handles.dffPlot);  %colorbar('on');
     colormap(handles.dffPlot, 'jet');
+    
+    for t = 1:numel(cb.TickLabels)
+        cb.TickLabels{t} = ['\color{white}' cb.TickLabels{t}];
+    end
+          
+    for x = 1:numel(handles.dffPlot.XTickLabel)
+        handles.dffPlot.XTickLabel{x} = ['\color{white}' handles.dffPlot.XTickLabel{x}];
+    end
+
+    for y = 1:numel(handles.dffPlot.YTickLabel)
+        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.XTickLabel{y}];
+    end
+    
     traceMean = mean(handles.dFF(cellSelect,:),1);
 end
 
-xlabel(handles.dffPlot, 'Frames');
+xlabel(handles.dffPlot, 'Stack#', 'color', 'w');
 title(handles.dffPlot, 'Fluorescence Time Series', 'color', [1 1 1]);
 set(handles.dffPlot,'FontUnits','points','FontSize',10);
 
@@ -496,15 +522,15 @@ if handles.PlotSelect.Value < 3
         roi_in_slice =logical(roi_in_slice);
     end
 
-    if isfield(handles,'DispColor')==0
-        ColorR='r';
-    else
-        allColorinSlice=handles.DispColor(all_inSlice,:);
-        ColorR =allColorinSlice(roi_in_slice,:);
-        assignin('base','DispColorMatrix',handles.DispColor);
-        assignin('base','roi_in_slice',roi_in_slice);
-        assignin('base','ColorRinSlice',ColorR);
-    end
+%     if isfield(handles,'DispColor')==0
+%         ColorR='r';
+%     else
+%         allColorinSlice=handles.DispColor(all_inSlice,:);
+%         ColorR =allColorinSlice(roi_in_slice,:);
+%         assignin('base','DispColorMatrix',handles.DispColor);
+%         assignin('base','roi_in_slice',roi_in_slice);
+%         assignin('base','ColorRinSlice',ColorR);
+%     end
     
 %     hold(handles.sliceAx,'on'); %messing with hold messes up clicking on
 %     cells for some reason.
@@ -1424,42 +1450,42 @@ function PlotCellPos_Callback(hObject, eventdata, handles)
 % hObject    handle to PlotCellPos (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in ExportROIMean.
-function ExportROIMean_Callback(hObject, eventdata, handles)
-% hObject    handle to ExportROIMean (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-current_roi = handles.roiMaster.Value;
-roi = find(handles.roi(current_roi).members);
-selected_cells = roi(get(handles.roiListbox,'Value') );
-
-
-% CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
-% assignin('base','CurrentRoiList',CurrentRoi);
-ROIMeanFluo=mean(handles.fts(selected_cells,:),1);
-if isfield(handles,'dFF')
-    ROIMeandFF=mean(handles.dFF(selected_cells,:),1);
-end
-ROIList=selected_cells;
-[f2,path2] = uiputfile('ROIMeanFluo&ROIList.mat');
-save([path2,f2],'ROIMeanFluo','ROIMeandFF','ROIList');
-
-
-Fig1=figure;
-plot((1:length(ROIMeanFluo)),ROIMeanFluo);
-title('Mean Fluo of Selected Cells');
-savefig(Fig1,strcat(path2,f2,'-Fluo.fig'));
-
-if isfield(handles,'dFF')
-    Fig2=figure;
-    plot((1:length(ROIMeandFF)),ROIMeandFF);
-    title('Mean dFF of Selected Cells');
-    savefig(Fig2,strcat(path2,f2,'-dFF.fig'));
-end
-
-guidata(hObject, handles);
+% 
+% 
+% % --- Executes on button press in ExportROIMean.
+% function ExportROIMean_Callback(hObject, eventdata, handles)
+% % hObject    handle to ExportROIMean (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% current_roi = handles.roiMaster.Value;
+% roi = find(handles.roi(current_roi).members);
+% selected_cells = roi(get(handles.roiListbox,'Value') );
+% 
+% 
+% % CurrentRoi=find(handles.roi(handles.roiMaster.Value(1)).members);
+% % assignin('base','CurrentRoiList',CurrentRoi);
+% ROIMeanFluo=mean(handles.fts(selected_cells,:),1);
+% if isfield(handles,'dFF')
+%     ROIMeandFF=mean(handles.dFF(selected_cells,:),1);
+% end
+% ROIList=selected_cells;
+% [f2,path2] = uiputfile('ROIMeanFluo&ROIList.mat');
+% save([path2,f2],'ROIMeanFluo','ROIMeandFF','ROIList');
+% 
+% 
+% Fig1=figure;
+% plot((1:length(ROIMeanFluo)),ROIMeanFluo);
+% title('Mean Fluo of Selected Cells');
+% savefig(Fig1,strcat(path2,f2,'-Fluo.fig'));
+% 
+% if isfield(handles,'dFF')
+%     Fig2=figure;
+%     plot((1:length(ROIMeandFF)),ROIMeandFF);
+%     title('Mean dFF of Selected Cells');
+%     savefig(Fig2,strcat(path2,f2,'-dFF.fig'));
+% end
+% 
+% guidata(hObject, handles);
 
 
 % --- Executes on button press in pushbutton15.
