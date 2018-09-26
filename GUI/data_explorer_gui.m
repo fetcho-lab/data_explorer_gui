@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 26-Sep-2018 09:09:43
+% Last Modified by GUIDE v2.5 26-Sep-2018 11:20:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -293,37 +293,50 @@ handles.CirclePoint=plot3(handles.spPos(handles.CellNoToFind,1), handles.spPos(h
 
 function handles=plotfts(handles, cellSelect)
 %plots fluorescent time series on the time series plot
-axes(handles.dffPlot), cla %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
+cla(handles.dffPlot); %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
 % yyaxis left
 hold on
 
 % plot(handles.fts(cellSelect,:),'color',[0 1 0],'linewidth',2);
 if get(handles.raw_trace_selector,'Value')
     plotTraces_GUI(handles.fts(cellSelect,:), 200, 2, handles.dffPlot);
-    colorbar('off');
-    ylabel('Intensity - Mean');
+    colorbar(handles.dffPlot, 'off');
+    ylabel(handles.dffPlot, 'Intensity - Mean');
+    traceMean = mean(handles.fts(cellSelect,:),1);
 elseif get(handles.dFF_traces,'Value')
     plotTraces_GUI(handles.dFF(cellSelect,:), 1, 3, handles.dffPlot);
-    colorbar('off');
-    ylabel('\Delta F/F');
+    colorbar(handles.dffPlot, 'off');
+    ylabel(handles.dffPlot, '\Delta F/F');
+    traceMean = mean(handles.dFF(cellSelect,:),1);
 elseif get(handles.heatmap_selector,'Value')
     toplot = handles.fts(cellSelect,:);
     toplot = bsxfun(@minus, toplot, median(toplot,2));
     imagesc(handles.dffPlot, toplot );
-    axis tight
-    colorbar;  %colorbar('on');
-    colormap jet;
+    set(handles.dffPlot, 'XTickMode', 'auto', 'YTickMode', 'auto');
+    ylabel(handles.dffPlot, 'Selected Cells');
+    axis(handles.dffPlot, 'tight');
+    colorbar(handles.dffPlot);  %colorbar('on');
+    colormap(handles.dffPlot, 'jet');
+    traceMean = mean(handles.fts(cellSelect,:),1);
 elseif get(handles.dFF_heatmap,'Value')
     toplot = handles.dFF(cellSelect,:);
     imagesc(handles.dffPlot, toplot );
-    axis tight
-    colorbar;  %colorbar('on');
-    colormap jet;
+    set(handles.dffPlot, 'XTickMode', 'auto', 'YTickMode', 'auto');
+    ylabel(handles.dffPlot, 'Selected Cells');
+    axis(handles.dffPlot, 'tight');
+    colorbar(handles.dffPlot);  %colorbar('on');
+    colormap(handles.dffPlot, 'jet');
+    traceMean = mean(handles.dFF(cellSelect,:),1);
 end
 
-xlabel('Frames');
-title('Fluorescence Time Series', 'color', [1 1 1]);
-set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
+xlabel(handles.dffPlot, 'Frames');
+title(handles.dffPlot, 'Fluorescence Time Series', 'color', [1 1 1]);
+set(handles.dffPlot,'FontUnits','points','FontSize',10);
+
+cla(handles.StimTSPlot);
+plot(handles.StimTSPlot, traceMean, 'k');
+ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
 % handles.dffPlot = gca;
 
 function handles = plot_pos_maps(handles)
@@ -441,7 +454,7 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
         handles.sPMap_Ax_roi = viscircles(handles.slicePosMap, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
     end
     
-    title(handles.slicePosMap,sprintf('Stack %04.0f', currentT));
+    title(handles.slicePosMap,sprintf('Stack %04.0f', currentT), 'color', 'w');
     drawnow;
     pause(0.005);
 %     colormap(gca, 'jet');
@@ -848,11 +861,7 @@ elseif strcmp(eventdata.Key, 'k')
         handles = display_roiListbox(handles);
     end
 elseif strcmp(eventdata.Character,'p')||strcmp(eventdata.Character,'q')
-    current_roi = handles.roiMaster.Value;
-    roi = find(handles.roi(current_roi).members);
-    selected_cells = roi(get(handles.roiListbox,'Value') );
-    handles=plotfts(handles,selected_cells);
-    guidata(hObject,handles);
+    handles = plot_selected_roi_in_dffPlot_window(handles);
 elseif strcmp(eventdata.Character,'f') && handles.PlotSelect.Value < 3
     current_roi = handles.roiMaster.Value;
     roi = find(handles.roi(current_roi).members);
@@ -1091,17 +1100,24 @@ function uipanel12_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
+function handles = plot_selected_roi_in_dffPlot_window(handles)
+current_roi = handles.roiMaster.Value;
+roi = find(handles.roi(current_roi).members);
+selected_cells = roi(get(handles.roiListbox,'Value') );
+handles=plotfts(handles,selected_cells);
+
 
 % --- Executes on button press in roi_plot_fts_button.
 function roi_plot_fts_button_Callback(hObject, eventdata, handles)
 % hObject    handle to roi_plot_fts_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-current_roi = handles.roiMaster.Value;
-
-roi = find(handles.roi(current_roi).members);
-selected_cells = roi(get(handles.roiListbox,'Value') );
-handles=plotfts(handles,selected_cells);
+% current_roi = handles.roiMaster.Value;
+% 
+% roi = find(handles.roi(current_roi).members);
+% selected_cells = roi(get(handles.roiListbox,'Value') );
+% handles=plotfts(handles,selected_cells);
+handles = plot_selected_roi_in_dffPlot_window(handles);
 guidata(hObject,handles);
 
 
@@ -1665,7 +1681,8 @@ function dFF_traces_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of dFF_traces
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handles=plotfts(handles,handles.CellNoToFindinSlice);
+handles = plot_selected_roi_in_dffPlot_window(handles);
+guidata(hObject,handles);
 
 % --- Executes on button press in raw_trace_selector.
 function raw_trace_selector_Callback(hObject, eventdata, handles)
@@ -1676,7 +1693,8 @@ function raw_trace_selector_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of raw_trace_selector
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handles=plotfts(handles,handles.CellNoToFindinSlice);
+handles = plot_selected_roi_in_dffPlot_window(handles);
+guidata(hObject,handles);
 
 
 % --- Executes on button press in heatmap_selector.
@@ -1688,7 +1706,8 @@ function heatmap_selector_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of heatmap_selector
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handles=plotfts(handles,handles.CellNoToFindinSlice);
+handles = plot_selected_roi_in_dffPlot_window(handles);
+guidata(hObject,handles);
 
 % --- Executes on button press in dFF_heatmap.
 function dFF_heatmap_Callback(hObject, eventdata, handles)
@@ -1700,7 +1719,8 @@ function dFF_heatmap_Callback(hObject, eventdata, handles)
 
 % handles=plotfts(handles,handles.CellSelectedinSlice);
 % handles = plot_fts_in_slice(handles);
-handles=plotfts(handles,handles.CellNoToFindinSlice);
+handles = plot_selected_roi_in_dffPlot_window(handles);
+guidata(hObject,handles);
 
 % --- Executes on button press in CheckROIInRawData.
 function CheckROIInRawData_Callback(hObject, eventdata, handles)
@@ -2094,20 +2114,20 @@ end
 % set(handles.ROICellNo,'String',num2str(sum(handles.roi(current_roi).members)));
 
 
-% --- Executes on button press in ClearColor.
-function ClearColor_Callback(hObject, eventdata, handles)
-% hObject    handle to ClearColor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-allRoiCells=handles.roi(1).members;
-for i=1:size(handles.roi,2)
-    allRoiCells=allRoiCells+handles.roi(i).members;
-end
-allRoiCells(allRoiCells>0)=1;
-allRoiCells=logical(allRoiCells);
-handles.DispColor(allRoiCells)=30;
-handles=plot_pos_maps(handles);
-guidata(hObject,handles);
+% % --- Executes on button press in ClearColor.
+% function ClearColor_Callback(hObject, eventdata, handles)
+% % hObject    handle to ClearColor (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% allRoiCells=handles.roi(1).members;
+% for i=1:size(handles.roi,2)
+%     allRoiCells=allRoiCells+handles.roi(i).members;
+% end
+% allRoiCells(allRoiCells>0)=1;
+% allRoiCells=logical(allRoiCells);
+% handles.DispColor(allRoiCells)=30;
+% handles=plot_pos_maps(handles);
+% guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function Untitled_2_Callback(hObject, eventdata, handles)
@@ -2262,21 +2282,21 @@ function [htmlname]=regexprep(Entry)
 htmlname = sprintf('<HTML><BODY bgcolor="%s">%s', 'red', Entry);
 
 
-% --- Executes on button press in LoadSequence.
-function LoadSequence_Callback(hObject, eventdata, handles)
-% hObject    handle to LoadSequence (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[SeriesFile,SeriesFilePath] = uigetfile('.mat','Please select fluorescence time series .mat file');
-cd(SeriesFilePath);
-SeriesFileDirectory= [SeriesFilePath,SeriesFile];
-SeriesFile=load(SeriesFileDirectory);
-
-plot(1:length(SeriesFile.StimTimeSeries),SeriesFile.StimTimeSeries,'Parent',handles.StimTSPlot);
-xLimits = get(handles.dffPlot,'XLim');
-set(handles.StimTSPlot,'XLim',xLimits);
-set(handles.StimTSPlot,'XColor',[1 1 1]);
-guidata(hObject,handles);
+% % --- Executes on button press in LoadSequence.
+% function LoadSequence_Callback(hObject, eventdata, handles)
+% % hObject    handle to LoadSequence (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% [SeriesFile,SeriesFilePath] = uigetfile('.mat','Please select fluorescence time series .mat file');
+% cd(SeriesFilePath);
+% SeriesFileDirectory= [SeriesFilePath,SeriesFile];
+% SeriesFile=load(SeriesFileDirectory);
+% 
+% plot(1:length(SeriesFile.StimTimeSeries),SeriesFile.StimTimeSeries,'Parent',handles.StimTSPlot);
+% xLimits = get(handles.dffPlot,'XLim');
+% set(handles.StimTSPlot,'XLim',xLimits);
+% set(handles.StimTSPlot,'XColor',[1 1 1]);
+% guidata(hObject,handles);
 
 
 % % --- Executes on button press in ColorSelection.
@@ -2316,38 +2336,38 @@ guidata(hObject,handles);
 %     save([path2,f2],'ROIList','spPos','fluorescence_time_series','dFF','spRadiiXYZ','Sc');
 % end
 
-
-% --- Executes on button press in RandColor.
-function RandColor_Callback(hObject, eventdata, handles)
-% hObject    handle to RandColor (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-allRoiCells=handles.roi(1).members;
-for i=1:size(handles.roi,2)
-    allRoiCells=allRoiCells+handles.roi(i).members;
-end
-allRoiCells(allRoiCells>0)=1;
-allRoiCells=logical(allRoiCells);
-
-assignin('base','allroi',allRoiCells);
-assignin('base','DispColor',handles.DispColor);
-assignin('base','spPos',handles.spPos);
-handles.DispColor(allRoiCells)=zeros(size(handles.spPos,1),1);
-
-ROIMasterNo=size(handles.roi,2);
-StepNo=(100/ROIMasterNo);
-tempvector=[0:StepNo:100];
-tempvector=tempvector';
-
-assignin('base','tempvector',tempvector);
-for i1=1:ROIMasterNo
-    currentRoiCell=handles.roi(i1).members;
-    handles.DispColor(currentRoiCell)=tempvector(i1);
-end
-handles=plot_pos_maps(handles);
-guidata(hObject,handles);
-
+% 
+% % --- Executes on button press in RandColor.
+% function RandColor_Callback(hObject, eventdata, handles)
+% % hObject    handle to RandColor (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% allRoiCells=handles.roi(1).members;
+% for i=1:size(handles.roi,2)
+%     allRoiCells=allRoiCells+handles.roi(i).members;
+% end
+% allRoiCells(allRoiCells>0)=1;
+% allRoiCells=logical(allRoiCells);
+% 
+% assignin('base','allroi',allRoiCells);
+% assignin('base','DispColor',handles.DispColor);
+% assignin('base','spPos',handles.spPos);
+% handles.DispColor(allRoiCells)=zeros(size(handles.spPos,1),1);
+% 
+% ROIMasterNo=size(handles.roi,2);
+% StepNo=(100/ROIMasterNo);
+% tempvector=[0:StepNo:100];
+% tempvector=tempvector';
+% 
+% assignin('base','tempvector',tempvector);
+% for i1=1:ROIMasterNo
+%     currentRoiCell=handles.roi(i1).members;
+%     handles.DispColor(currentRoiCell)=tempvector(i1);
+% end
+% handles=plot_pos_maps(handles);
+% guidata(hObject,handles);
+% 
 
 % --- Executes on button press in gen_time_slice_movies.
 function gen_time_slice_movies_Callback(hObject, eventdata, handles)
