@@ -313,6 +313,7 @@ elseif get(handles.heatmap_selector,'Value')
     toplot = bsxfun(@minus, toplot, median(toplot,2));
     imagesc(handles.dffPlot, toplot );
     set(handles.dffPlot, 'XTickMode', 'auto', 'YTickMode', 'auto');
+%     set(handles.dffPlot, 'XTickLabel', []);
     ylabel(handles.dffPlot, 'Selected Cells', 'color', 'w');
     axis(handles.dffPlot, 'tight');
     cb = colorbar('peer', handles.dffPlot);  %colorbar('on');
@@ -327,7 +328,7 @@ elseif get(handles.heatmap_selector,'Value')
     end
 
     for y = 1:numel(handles.dffPlot.YTickLabel)
-        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.XTickLabel{y}];
+        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.YTickLabel{y}];
     end
 
     traceMean = mean(handles.fts(cellSelect,:),1);
