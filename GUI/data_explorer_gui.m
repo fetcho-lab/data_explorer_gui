@@ -81,6 +81,9 @@ handles.im=[];
 handles.timeListener=addlistener(handles.sliceSelector,'ContinuousValueChange',@sliceSelector_Callback);
 handles.zListener=addlistener(handles.cellSelector,'ContinuousValueChange',@cellSelector_Callback);
 
+v = figure(1);
+set(v,'Visible','off');
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -234,8 +237,7 @@ if handles.PlotSelect.Value < 3
         end
 
     else
-        axes(handles.ScatterPlotAx);
-        cla;
+        cla(handles.ScatterPlotAx);
         return;
     end
 
@@ -244,18 +246,18 @@ if handles.PlotSelect.Value < 3
     cellSelect = f_inSlice( handles.cellSelect);
     handles.cellSelect_idx = cellSelect;
     %updates circled point on coronal slice plot
-    axes(handles.sliceAx);
+%     axes(handles.sliceAx);
     if isfield(handles,'CirclePointinSlice')
            delete(handles.CirclePointinSlice );
     end
-    hold on;
+    hold(handles.sliceAx, 'on');
 
     handles.CellNoToFindinSlice=cellSelect;
     handles=DrawCirclePointinSlice(handles);
     handles=plotfts(handles,cellSelect);
 else
     
-%     axes(handles.dffPlot); hold on
+	hold(handles.dffPlot, 'on'); %hold on
     if isfield(handles,'timeLine') && ishandle(handles.timeLine)
 %         set(handles.timeLine, 'XData', [handles.sliceSelector.Value, handles.sliceSelector.Value]);
           handles.timeLine.XData = [handles.sliceSelector.Value, handles.sliceSelector.Value];
@@ -267,7 +269,7 @@ else
 %         disp('Setting new time line');
         pause(0.01);
     end
-%     hold off
+    hold(handles.dffPlot, 'off');
 end
 
 
@@ -295,7 +297,7 @@ function handles=plotfts(handles, cellSelect)
 %plots fluorescent time series on the time series plot
 cla(handles.dffPlot); %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
 % yyaxis left
-hold on
+hold(handles.dffPlot,'on');
 
 % plot(handles.fts(cellSelect,:),'color',[0 1 0],'linewidth',2);
 if get(handles.raw_trace_selector,'Value')
@@ -375,8 +377,8 @@ function handles = plot_pos_maps(handles)
 %%%%%
 
 if handles.PlotSelect.Value==1
-    axes(handles.slicePosMap), cla
-    hold on
+    cla(handles.slicePosMap)
+    hold(handles.slicePosMap, 'on')
     % posB = handles.spPos(handles.labelVector & ~handles.inSlice,:);
     % posR = handles.spPos(handles.labelVector & handles.inSlice,:);
     % plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
@@ -384,23 +386,23 @@ if handles.PlotSelect.Value==1
     %----Cui Edit----
     posAllCell=handles.spPos;
     scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.ColorOfDots,'.','hittest','off', 'Parent', handles.slicePosMap);
-    colormap jet;
-    caxis([str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
-    CB1=colorbar;
+    colormap(handles.slicePosMap, 'jet');
+    caxis(handles.slicePosMap, [str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
+    CB1=colorbar('peer', handles.slicePosMap);
     CB1.Color='w';
     
     % CB1.Label.String='Max Fluorescence Intensity of Cells (Dots)';
     posR_C = handles.spPos( handles.inSlice,:);
     plot3(posR_C(:,1),posR_C(:,2),posR_C(:,3),'k.','Parent', handles.slicePosMap);
-    grid on;
-    xlabel('X','Color','w');
-    ylabel('Y','Color','w');
-    zlabel('Z','Color','w');
+    grid(handles.slicePosMap, 'on');
+    xlabel(handles.slicePosMap, 'X','Color','w');
+    ylabel(handles.slicePosMap,'Y','Color','w');
+    zlabel(handles.slicePosMap,'Z','Color','w');
     
     % set(gca,'color',[0 0 0]);
     %----Cui Edit End----
-    grid on
-    axis equal
+    grid(handles.slicePosMap, 'on');
+    axis(handles.slicePosMap, 'equal');
     if get(handles.CellFinderStay,'Value')==1
         handles=DrawCirclePoint_Special(hObject,handles);
     end
@@ -423,7 +425,7 @@ elseif handles.PlotSelect.Value==2
         plot3(posB(:,1),posB(:,2),posB(:,3),'k.','Parent', handles.slicePosMap);
 %         plot3(poz(:,1),poz(:,2),poz(:,3),'ro', 'markerfacecolor','r','markersize',3);
 %         ColorBarlim = caxis;
-        caxis([0 100]);
+        caxis(handles.slicePosMap, [0 100]);
 %         CB2=colorbar;
 %         CB2.Color='w';
 %         ColorList=(ColorR./100).*(ColorBarlim(2)-ColorBarlim(1))+ColorBarlim(1)
@@ -487,7 +489,7 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
 %     colormap(gca, 'jet');
 %     caxis('auto');
 end
-set(gca,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
+set(handles.slicePosMap,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
 
 function handles = plot_slice_maps(handles)
 
@@ -653,7 +655,7 @@ handles.currentSlice = round( get(hObject,'Value') );
 handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles); 
-guidata(hObject,handles);
+% guidata(hObject,handles);
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -683,8 +685,9 @@ if handles.PlotSelect.Value == 3
 else
     handles.cellSelect = round( get(hObject,'Value') );
     handles = plot_fts_in_slice(handles);
+    guidata(hObject,handles);
 end
-guidata(hObject,handles);
+% guidata(hObject,handles);
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -1571,6 +1574,7 @@ handles=DrawCirclePoint(handles);
 set(handles.XVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,1)));
 set(handles.YVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,2)));
 set(handles.ZVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,3)));
+set(handles.sliceNum, 'String', num2str(round( handles.spPos(handles.CellNoToFind_Special,3))/handles.microns_per_z) );
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -2209,7 +2213,7 @@ elseif strcmp(eventdata.Key, 'delete')
     handles = update_roi(handles, [], 'delete');
     handles = display_roiListbox(handles);
 
-elseif strcmp(eventdata.Key, 'n')
+elseif strcmp(eventdata.Key, 'r')
     answer0=inputdlg('What would you like to rename this group?');
     newROIname=answer0{1,1};
 %     newROISize=size(handles.roi,2)+1;
