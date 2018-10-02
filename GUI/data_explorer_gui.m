@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 26-Sep-2018 11:20:53
+% Last Modified by GUIDE v2.5 02-Oct-2018 13:52:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -655,7 +655,7 @@ handles.currentSlice = round( get(hObject,'Value') );
 handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles); 
-% guidata(hObject,handles);
+guidata(hObject,handles);
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
@@ -1042,7 +1042,7 @@ function handles = update_roi(handles, roi, command)
 roistruct = handles.roi;
 
 if strcmp(command,'add')
-    roistruct(end+1) = roi;
+    roistruct = [handles.roi, roi];
 elseif strcmp(command, 'delete')
     current_roi = handles.roiMaster.Value;
     roistruct(current_roi) = [];
@@ -1671,6 +1671,7 @@ if get(hObject, 'Value') < 3
     axes(handles.sliceAx); view(3);
     set(handles.load_z_stack, 'Visible', 'off');
     set(handles.throw_roi_button, 'Visible', 'off');
+    set(handles.roi_mouse_select, 'Visible', 'off');
     set(handles.slicePosMap, 'Visible', 'on');
     colormap(handles.slicePosMap, 'jet')
 else
@@ -1678,6 +1679,7 @@ else
     axes(handles.slicePosMap); cla;
     set(handles.load_z_stack, 'Visible', 'on');
     set(handles.throw_roi_button, 'Visible', 'on');
+    set(handles.roi_mouse_select, 'Visible', 'on');
     handles.caxis0.String = '';
     handles.caxis1.String = '';
     handles.sPMap_Ax_roi = [];
@@ -2626,3 +2628,22 @@ uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
 guidata(hObject, handles);
 
+
+
+% --- Executes on button press in roi_mouse_select.
+function roi_mouse_select_Callback(hObject, eventdata, handles)
+% hObject    handle to roi_mouse_select (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+h = getrect(handles.sliceAx);
+h = h*handles.Sc(1);
+zLvl = round( get(handles.cellSelector, 'Value') );
+roiPos = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,:);
+inZ = round( roiPos(:,3)/handles.microns_per_z ) == zLvl;
+inRectangleX = [roiPos(:,1) > h(1) ] & [roiPos(:,1) < (h(1) + h(3))];
+inRectangleY = [roiPos(:,2) > h(2) ] & [roiPos(:,2) < (h(2) + h(4))];
+inRECTZ = inRectangleX & inRectangleY & inZ;
+handles.roiListbox.Value = find(inRECTZ);
+uicontrol(handles.roiListbox);
+handles.cell_roi_list = [];
+guidata(hObject, handles);       
