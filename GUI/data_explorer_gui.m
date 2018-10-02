@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 02-Oct-2018 13:52:11
+% Last Modified by GUIDE v2.5 02-Oct-2018 15:47:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2647,3 +2647,22 @@ handles.roiListbox.Value = find(inRECTZ);
 uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
 guidata(hObject, handles);       
+
+
+% --- Executes on button press in remove_overlaps_button.
+function remove_overlaps_button_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_overlaps_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+answer0=inputdlg('What is the threshold limit for neighbors in microns?');
+limit=str2num( answer0{1,1} );
+[toRemove, toKeep] = remove_overlaps_fts(mean(handles.fts,2), handles.spPos, limit);
+newRoi(1).name = 'toKeep';
+newRoi(1).members = toKeep;
+newRoi(2).name = 'toRemove';
+newRoi(2).name = toRemove;
+handles = update_roi(handles, newRoi, 'add' );
+update_roiMasterList(handles);
+handles = display_roiListbox(handles);
+guidata(hObject,handles);
+
