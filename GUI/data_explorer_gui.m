@@ -2654,13 +2654,9 @@ function remove_overlaps_button_Callback(hObject, eventdata, handles)
 % hObject    handle to remove_overlaps_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-answer0=inputdlg('What is the threshold limit for neighbors in microns?');
-limit=str2num( answer0{1,1} );
-[toRemove, toKeep] = remove_overlaps_fts(mean(handles.fts,2), handles.spPos, limit);
-newRoi(1).name = 'toKeep';
-newRoi(1).members = toKeep;
-newRoi(2).name = 'toRemove';
-newRoi(2).name = toRemove;
+
+intensity = mean(handles.fts,2);
+newRoi = remove_overlaps_subGUI(intensity, handles.spPos);
 handles = update_roi(handles, newRoi, 'add' );
 update_roiMasterList(handles);
 handles = display_roiListbox(handles);

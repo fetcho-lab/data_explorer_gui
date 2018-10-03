@@ -1,41 +1,48 @@
-function [ toRemove, toKeep ] = remove_overlaps_fts( intensity, spPos_um, micron_threshold )
-% [ toRemove ] = remove_overlaps_fts( intensity, spPos_um, micron_threshold )
+function [ toKeep, toRemove ] = remove_overlaps_fts( intensity, spPos_um, micron_threshold, adjSliceOnly )
+% [ toRemove ] = remove_overlaps_fts( intensity, spPos_um, micron_threshold, adjSliceOnly )
 %   This function removes any neurons that are within the threshold
 %   distance of each other by only keeping the brightest of the pair in
 %   intensity. It returns a logical of which neurons should be removed. 
 
 toRemove = zeros(size(spPos_um,1), 1, 'logical');
-
+% adjSliceOnly = 1;
 disp('Removing overlaps...');
 tic
 m=0;
-while m<length(toRemove) %a while loop is implemented to allow re-check of candidate neurons in case more than 1 is within the threshold distance
+while m<length(toRemove) %a while loop is implemented to allow re-check f
     
     m = m+1; 
-    
-    if toRemove(m) %if the current candidate has already been flagged, continue to the next
+%     disp(m)
+    if toRemove(m)
        continue 
     end
     
-    %manhattan distance is used to speed up computation time. Euclidean is used for those that fall within a rough distance of the candidate
-    manhattan_distance = sum( abs( bsxfun(@minus, spPos_um, spPos_um(m,:) ) ), 2); 
-    within_threshold = manhattan_distance < 2*sqrt(2)*micron_threshold;
-    within_threshold(m) = 0; %the candidate itself will of course be within threshold and should be excluded
+    manhattan_distance = sum( abs( bsxfun(@minus, spPos_um, spPos_um(m,:) ) ), 2);
     
-    if sum(within_threshold) > 0
-        xCells = find(within_threshold & ~toRemove); %the exact distance is calculated for a smaller number of cells. xCells is the row number in spPos_um. those that already have been removed are excluded
+    if adjSliceOnly
+        inZ = abs( spPos_um(:,3) - spPos_um(m,3) ) < 5;
+        within_threshold = [manhattan_distance <  sqrt(2)*micron_threshold] & ~ inZ;
+    else
+        within_threshold = manhattan_distance < 2*sqrt(2)*micron_threshold;
+        within_threshold(m) = 0;
+    end
+    
+    
+    
+    if sum(within_threshold & ~toRemove) > 0
+        xCells = find(within_threshold & ~toRemove);
         exact_distance = pdist2(spPos_um(m,:), spPos_um(xCells,:));
         
         for k=1:length(exact_distance)
             
             if exact_distance(k) < micron_threshold
-                cells_comparing = [m xCells(k)]; %this bit of code selects the brightest pair for the first pair that is under the distance threshold
+                cells_comparing = [m xCells(k)];
                 [br, selected] = max( [intensity(m), intensity(xCells(k))] );
                 
                 toRemoveIdx = cells_comparing( mod(selected, 2) + 1);
-                toRemove(toRemoveIdx) = 1; %this flags that particular neuron for removal. 
+                toRemove(toRemoveIdx) = 1;
                 
-                m = m - 1; %re-check the candidate to eat up all pairs that are too close. 
+                m = m - 1; 
                 break;
             end
         end
