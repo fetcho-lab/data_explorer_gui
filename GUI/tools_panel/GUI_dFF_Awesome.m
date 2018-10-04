@@ -22,7 +22,7 @@ function varargout = GUI_dFF_Awesome(varargin)
 
 % Edit the above text to modify the response to help GUI_dFF_Awesome
 
-% Last Modified by GUIDE v2.5 28-May-2018 15:00:46
+% Last Modified by GUIDE v2.5 02-May-2018 14:00:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -88,23 +88,9 @@ stack_frequency = str2num( get(handles.frequency,'String') );
 window_size = str2num( get(handles.window_size, 'String') );
 basepercent = str2num(get(handles.basepercent, 'String') ); 
 lowpass_on = get(handles.lowfilt_check,'Value');
-SubBG_on = get(handles.SubBG,'Value');
-
-if SubBG_on
-    ExpandedBGfts=repmat(handles.BGfts',size(handles.fts,1),1);
-    assignin('base','ExpBG',ExpandedBGfts);
-    assignin('base','BG',handles.BGfts);
-    handles.BGSubtractedFTS=handles.fts-ExpandedBGfts;
-    
-    handles.dFF = lsExplorer_Compute_dFF(handles.BGSubtractedFTS, stack_frequency, window_size, basepercent, lowpass_on);
-    handles.dFF(any(isnan(handles.dFF),2),:)=0;
-else
-    handles.dFF = lsExplorer_Compute_dFF(handles.fts, stack_frequency, window_size, basepercent, lowpass_on);
-    handles.dFF(any(isnan(handles.dFF),2),:)=0;
-end
+handles.dFF = lsExplorer_Compute_dFF(handles.fts, stack_frequency, window_size, basepercent, lowpass_on);
 % handles.dFF=1;
 set(handles.statusbox,'String','Status: Done!');
-msgbox('Calculation Done!');
 setappdata(hObject,'dFF', handles.dFF);
 guidata(hObject, handles);
 
@@ -220,56 +206,13 @@ function save_pushbutton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 [filename, path] = uiputfile('*.mat','Select file to save (adds, does not overwrite if file exists)');
 dFF = handles.dFF;
-if isfield(handles,'BGfts')
-    FluoAfterSubtraction=handles.BGSubtractedFTS;
-    BackGroundFTS=handles.BGfts;
-else
-    FluoAfterSubtraction='No BG data loaded';
-    BackGroundFTS='No BG data loaded';
-end
-MovingWindowSize=str2num( get(handles.window_size, 'String') );
-StackFrequency = str2num( get(handles.frequency,'String') );
-BasePercent = str2num(get(handles.basepercent, 'String') ); 
-LowPass_on_Check = get(handles.lowfilt_check,'Value');
-
 if isnan(dFF)
     error('dFF has not been computed!');
 end
 savepath = [path,filename];
 if exist(savepath,'file')
-    save(savepath, 'dFF', 'FluoAfterSubtraction','BackGroundFTS','MovingWindowSize','StackFrequency','BasePercent','LowPass_on_Check','-append');
+    save(savepath, 'dFF', '-append');
 else
-    save(savepath, 'dFF','FluoAfterSubtraction','BackGroundFTS','MovingWindowSize','StackFrequency','BasePercent','LowPass_on_Check','-v7.3');
+    save(savepath, 'dFF', '-v7.3');
 end
 
-
-% --- Executes on button press in LoadBG.
-function LoadBG_Callback(hObject, eventdata, handles)
-% hObject    handle to LoadBG (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-[filename, path] = uigetfile('*.csv','Select BGfts file to read');
-filecontent=csvread([path,filename],1,1);
-BG=filecontent(:,1);
-handles.BGfts=BG;
-set(handles.BGIndicator,'String',strcat('Loaded:',[path,filename]));
-set(handles.SubBG,'Value',1);
-guidata(hObject,handles);
-
-
-% --- Executes on button press in SubBG.
-function SubBG_Callback(hObject, eventdata, handles)
-% hObject    handle to SubBG (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of SubBG
-
-
-% --- Executes on button press in pushbutton6.
-function pushbutton6_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-msgbox('To simply use lowest 5% as basal fluo: set moving window size to 99999(make sure it exceed the total time length), set basal percentile to 5%, uncheck Low-Pass Filter, load BG fluo if you like, remember to check the Subtract Backgroud, then Compute.');
