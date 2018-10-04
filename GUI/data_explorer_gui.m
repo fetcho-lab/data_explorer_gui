@@ -65,7 +65,7 @@ handles.stackAcqFreq = 1; %initialized with a dummy value
 handles.cellSelect = 1; %for plotting on slice axis
 handles.cellSelect_idx = 1; %for keeping track of absolute cell identity
 
-handles.microns_per_z = 5;
+handles.microns_per_z = NaN;
 
 handles.roi = struct;
 handles.currView = [];
@@ -95,13 +95,19 @@ end
 
 function handles=loadDataset(filepath,handles,~)
 %switches data set
+[path,filename,ext] = fileparts(filepath);
+handles.file.path = path;
+handles.file.filename = filename;
+
 load(filepath);
 assignin('base','filepath',filepath);
 handles.fts = fluorescence_time_series;
 assignin('base','fluorescence_time_series',fluorescence_time_series);
 assignin('base','spPos',spPos);
 handles.spPos = spPos;
-handles.Sc = Sc;
+handles.Sc = Sc; %Sc stores the scaling information for microns per pixel in x,y,z
+handles.microns_per_z = Sc(3,3);
+handles.cellSegmentation = cellSegmentation;
 
 if exist('spRadiiXYZ','var')
     handles.spRadiiXYZ = spRadiiXYZ;
@@ -125,7 +131,7 @@ if exist('roi','var')
     handles = display_roiListbox(handles);
 else
     handles.roi=[];
-    handles.roi.name = 'default';
+    handles.roi.name = 'All';
     handles.roi.members = ones(size(spPos,1),1,'logical');
 %     handles.roi.ROIcellNo = [1:size(spPos,1)]';
     handles = display_roiListbox(handles);
@@ -925,8 +931,36 @@ function ExportROI_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 roi = handles.roi;
-[f,path] = uiputfile('roi.mat');
-save([path,f],'roi');
+xspPos = handles.spPos;
+xfts = handles.fts;
+xdff = handles.dFF;
+Sc = handles.Sc;
+xRadii = handles.spRadiiXYZ;
+xCellSegmentation = handles.cellSegmentation;
+
+[f,path] = uiputfile('SavedROIs.mat');
+save([path,f], 'roi');
+
+savedata = questdlg('Export All ROI subsets (fts, pos, dFF, etc.) into separate files?');
+if savedata
+    for m=1:numel(roi)
+        spPos = xspPos(roi(m).members,:);
+        fluorescence_time_series = xfts(roi(m).members,:);
+        spRadiiXYZ = xRadii(roi(m).members,:);
+        cellSegmentation = xCellSegmentation(roi(m).members);
+        parent_roi = roi(m);
+
+        roi_data_name = [path,f(1:end-4),'_ROI_and_Data_',roi(m).name,'.mat'];
+
+        save(roi_data_name,'parent_roi','fluorescence_time_series','spPos','spRadiiXYZ','cellSegmentation','Sc','-v7.3');
+        if ~isnan(xdff)
+            dFF = xdff(roi(m).members);
+            save(roi_data_name,'dFF', '-append');
+        end
+
+    end
+end
+
 %hint: roi struct has fields members (logical), name (string)
 
 % --- Executes on button press in LoadROI.
@@ -2655,8 +2689,8 @@ function remove_overlaps_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-intensity = mean(handles.fts,2);
-newRoi = remove_overlaps_subGUI(intensity, handles.spPos);
+keepMetric = max(handles.fts,2);
+newRoi = remove_overlaps_subGUI(keepMetric, handles.spPos);
 handles = update_roi(handles, newRoi, 'add' );
 update_roiMasterList(handles);
 handles = display_roiListbox(handles);
