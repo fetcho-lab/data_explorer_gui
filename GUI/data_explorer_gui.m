@@ -563,30 +563,30 @@ if handles.PlotSelect.Value < 3
     
 elseif ~strcmp(handles.calling_function, 'sliceSelector')
     if ~isempty(handles.zStack)
-       zLvl = round( get(handles.cellSelector, 'Value') );
-       climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
-    if isnan(climz(1))
-       imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
-       caxis(handles.sliceAx, 'auto');
-       climz = get(handles.sliceAx, 'CLim');
-       handles.caxis0.String = num2str(climz(1), '%4.0f');
-       handles.caxis1.String = num2str(climz(2), '%4.0f');       
-    else
-       cla(handles.sliceAx);
-       imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
-    end
-       title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
-       inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
-       roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
-       if sum(roi_in_slice) > 0
-           cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
-           rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
-           handles.sAx_roi = viscircles(handles.sliceAx, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
-       end
-       drawnow;
-       pause(0.005);
-%        handles.sliceAx = gca;
-%        axis equal
+           zLvl = round( get(handles.cellSelector, 'Value') );
+           climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
+        if isnan(climz(1))
+           imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
+           caxis(handles.sliceAx, 'auto');
+           climz = get(handles.sliceAx, 'CLim');
+           handles.caxis0.String = num2str(climz(1), '%4.0f');
+           handles.caxis1.String = num2str(climz(2), '%4.0f');       
+        else
+           cla(handles.sliceAx);
+           imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
+        end
+           title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
+           inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
+           roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
+           if sum(roi_in_slice) > 0
+               cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
+               rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
+               handles.sAx_roi = viscircles(handles.sliceAx, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
+           end
+           drawnow;
+           pause(0.005);
+    %        handles.sliceAx = gca;
+    %        axis equal
     end
 end
 
@@ -1109,52 +1109,11 @@ function roiMaster_Callback(hObject, eventdata, handles)
 
 % set(handles.CorrCellNoList,'Max',9999999999999,'Min',0);
 handles = guidata(hObject);
-
+handles.calling_function = 'roiMaster';
 handles = display_roiListbox(handles);
 handles = plot_pos_maps(handles);
 handles = plot_slice_maps(handles);
 handles = plot_fts_in_slice(handles);
-
-%WTF IS THIS? TALK TO DAWNIS BEFORE IMPLEMENTING THIS KIND OF MYSTERIOUS
-%CRAP. 09/25/2018
-% axes(handles.dffPlot), cla %this bit of code will generate a warning if the cell has changed but trial has not. not important. 
-% % yyaxis left
-% hold on
-% 
-% CellNoToPlot=find(handles.roi(get(hObject,'Value')).members);
-% if get(handles.raw_trace_selector,'Value')
-%     ftsToPlot=mean(handles.fts(CellNoToPlot,:),1);
-%     plotTraces_GUI(ftsToPlot, 100, 4, handles.dffPlot);
-%     colorbar('off');
-%     ylabel('Intensity - Mean');
-% elseif get(handles.dFF_traces,'Value')
-%     dFFToPlot=mean(handles.dFF(CellNoToPlot,:),1);
-%     plotTraces_GUI(dFFToPlot, 1, 3, handles.dffPlot);
-%     colorbar('off');
-%     ylabel('\Delta F/F');
-% elseif get(handles.heatmap_selector,'Value')
-%     toplot=mean(handles.fts(CellNoToPlot,:),1);
-% %     toplot = handles.fts(cellSelect,:);
-%     toplot = bsxfun(@minus, toplot, median(toplot,2));
-%     imagesc(handles.dffPlot, toplot );
-%     axis tight
-%     CB1=colorbar;  %colorbar('on');
-%     CB1.Color='w';
-%     colormap jet;
-% elseif get(handles.dFF_heatmap,'Value')
-%     toplot=mean(handles.dFF(CellNoToPlot,:),1);
-% %     toplot = handles.dFF(cellSelect,:);
-%     imagesc(handles.dffPlot, toplot );
-%     axis tight
-%     CB1=colorbar;  %colorbar('on');
-%     CB1.Color='w';
-%     colormap jet;
-% end
-% 
-% xlabel('Frames');
-% title('Fluorescence Time Series', 'color', [1 1 1]);
-% set(handles.dffPlot,'FontUnits','normalized','FontSize',0.06);
-% handles.dffPlot = gca;
 
 guidata(hObject, handles);
 
