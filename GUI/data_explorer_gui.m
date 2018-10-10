@@ -2458,7 +2458,7 @@ lsStackFiles= dir ('*.klb');
 stackdata = readImage(lsStackFiles(1).name);
 
 zSize = size(stackdata,3);
-tSize = numel(stackDirectory);
+tSize = numel(lsStackFiles);
 
 % fs=filesep;
 cd('tsView');
