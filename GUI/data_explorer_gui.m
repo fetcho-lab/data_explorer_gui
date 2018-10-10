@@ -2594,7 +2594,7 @@ function load_z_stack_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-[file,path] = uigetfile({'*.klb';'*.tif'}, 'Select reference z-stack to load');
+[file,path] = uigetfile({'*.klb;*.tif','Image Files (*.klb, *.tif)'; '*.*', 'All Files'}, 'Select reference z-stack to load');
 tic; handles.zStack = readImage([path,filesep,file]); toc; 
 handles = reset_slider_handles(handles);
 handles.calling_function = 'Load Z';
