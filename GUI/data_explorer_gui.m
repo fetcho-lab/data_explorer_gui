@@ -1608,7 +1608,7 @@ handles=DrawCirclePoint(handles);
 set(handles.XVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,1)));
 set(handles.YVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,2)));
 set(handles.ZVal, 'String', num2str(handles.spPos(handles.CellNoToFind_Special,3)));
-set(handles.sliceNum, 'String', num2str(round( handles.spPos(handles.CellNoToFind_Special,3))/handles.microns_per_z) );
+set(handles.sliceNum, 'String', num2str(round( handles.spPos(handles.CellNoToFind_Special,3)/handles.microns_per_z) ) );
 guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
