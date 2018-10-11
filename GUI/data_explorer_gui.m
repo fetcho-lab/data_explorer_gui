@@ -1591,7 +1591,7 @@ function FTSViewer_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles=CXYsDataExplorer_Copied2(handles);
+handles=CXYsDataExplorer_Copied2(handles.fts, handles.spPos, handles.Sc);
 guidata(hObject,handles);
 
 % --- Executes on button press in CompressCellNo.

@@ -61,10 +61,16 @@ handles.FileName = '';
 handles.currentfile = '';
 handles.SizeOfDots=20;%Set default dot size here
 
+handles.CurrentTPNo=1; %Set initial Time point here!!
+handles.TotalTPNo=size(handles.fts,2);
+set(handles.TotalTP,'String',num2str(handles.TotalTPNo));
+set(handles.CurrentTP,'String',num2str(handles.CurrentTPNo));
+handles.CurrentCorrCalculated=0;
+
 global AllPosition %Defined a global here!
 AllPosition=handles.spPos;
 
-set(handles.FileName,'String',filepath);
+set(handles.FileName,'String',handles.currentfile);
 assignin('base', 'handles0',handles);
 handles = PlotCurrentTimepointMap(handles);
 handles = PlotHeatMap(handles);
