@@ -2409,11 +2409,21 @@ handles=guidata(hObject);
 
 currentDirectory = pwd;
 
-stackDirectory = uigetdir(pwd, 'Select .klb directory to generate time slice movies');
+stackDirectory = uigetdir(pwd, 'Select .klb or .tif directory to generate time slice movies');
 cd(stackDirectory);
 
 mkdir('tsView');
-lsStackFiles= dir ('*.klb');
+lsStackFiles_klb = dir ('*.klb');
+lsStackFiles_tif = dir ('*.tif');
+
+if numel(lsStackFiles_klb) > numel(lsStackFiles_tif)
+    lsStackFiles = lsStackFiles_klb;
+    disp('Selecting .klb stacks...');
+else
+    lsStackFiles = lsStackFiles_tif;
+    disp('Selecting .tif stacks...');
+end
+
 stackdata = readImage(lsStackFiles(1).name);
 
 zSize = size(stackdata,3);
@@ -2426,7 +2436,7 @@ for z=1:zSize
     stackName = sprintf('ts%03d',z);
     tiffName{z} = [stackName,'.tif'];
 
-    if exist(tiffName{z},'file');
+    if exist(tiffName{z},'file')
        delete(tiffName{z});
     end
     
