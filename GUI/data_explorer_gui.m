@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 02-Oct-2018 15:47:14
+% Last Modified by GUIDE v2.5 11-Oct-2018 13:43:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1382,52 +1382,52 @@ set(handles.StimTSPlot,'XColor',[1 1 1]);
  guidata(hObject,handles);
 
 
-
-% --- Executes on selection change in CorrCellNoList.
-function CorrCellNoList_Callback(hObject, eventdata, handles)
-% hObject    handle to CorrCellNoList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns CorrCellNoList contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from CorrCellNoList
-
-% assignin('base','CorrCellNoList',get(handles.CorrCellNoList,'String'));
-% handles.SelectedCorCellListNo=get(hObject,'Value');
-% CurrentString=str2num(get(handles.CorrCellNoList,'String'));
-
-set(handles.CorrCellNoList,'Max',99999999999,'Min',0);
-set(handles.CurrentCorrCellSeqNo,'String',num2str(get(hObject,'Value')));
-
-if handles.SeriestoAllCheck==1
-    handles.SelectedCorrCellNo=handles.CorrCellNoToSeries(get(hObject,'Value'));
-    selectedcellNo=length(handles.SelectedCorrCellNo)
-else
-    handles.SelectedCorrCellNo=handles.CorrCellNo(get(hObject,'Value'));
-end
-
-guidata(hObject,handles);
-% plot(1:size(ndles.fts,2),handles.fts(handles.SelectedCorrCellNo),'Parent',handles.dffPlot);
-
-assignin('base','SelectedCorrCellNo',handles.SelectedCorrCellNo);
-% if handles.SeriesToAllCalculated==1
-
-%--------Plot fts, plot slice in slice PosMap, plot SliceAx, draw circle in both-------------
-handles=plotfts(handles, handles.SelectedCorrCellNo);
-
-handles.currentSlice = ceil( (handles.spPos(handles.SelectedCorrCellNo,1)-min(handles.spPos(:,1)))/handles.sliceThickness);%ceil( handles.spPos(handles.SelectedCorrCellNo,1)/handles.sliceThickness);
-handles=plot_slice_maps(handles);
-handles = plot_pos_maps(handles);
-
-handles.CellNoToFindinSlice=handles.SelectedCorrCellNo;
-axes(handles.sliceAx);
-handles=DrawCirclePointinSlice(handles);
-
-handles.CellNoToFind=handles.SelectedCorrCellNo;
-axes(handles.slicePosMap);
-handles=DrawCirclePoint(handles);
-
-guidata(hObject,handles);
+% 
+% % --- Executes on selection change in CorrCellNoList.
+% function CorrCellNoList_Callback(hObject, eventdata, handles)
+% % hObject    handle to CorrCellNoList (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hints: contents = cellstr(get(hObject,'String')) returns CorrCellNoList contents as cell array
+% %        contents{get(hObject,'Value')} returns selected item from CorrCellNoList
+% 
+% % assignin('base','CorrCellNoList',get(handles.CorrCellNoList,'String'));
+% % handles.SelectedCorCellListNo=get(hObject,'Value');
+% % CurrentString=str2num(get(handles.CorrCellNoList,'String'));
+% 
+% set(handles.CorrCellNoList,'Max',99999999999,'Min',0);
+% set(handles.CurrentCorrCellSeqNo,'String',num2str(get(hObject,'Value')));
+% 
+% if handles.SeriestoAllCheck==1
+%     handles.SelectedCorrCellNo=handles.CorrCellNoToSeries(get(hObject,'Value'));
+%     selectedcellNo=length(handles.SelectedCorrCellNo)
+% else
+%     handles.SelectedCorrCellNo=handles.CorrCellNo(get(hObject,'Value'));
+% end
+% 
+% guidata(hObject,handles);
+% % plot(1:size(ndles.fts,2),handles.fts(handles.SelectedCorrCellNo),'Parent',handles.dffPlot);
+% 
+% assignin('base','SelectedCorrCellNo',handles.SelectedCorrCellNo);
+% % if handles.SeriesToAllCalculated==1
+% 
+% %--------Plot fts, plot slice in slice PosMap, plot SliceAx, draw circle in both-------------
+% handles=plotfts(handles, handles.SelectedCorrCellNo);
+% 
+% handles.currentSlice = ceil( (handles.spPos(handles.SelectedCorrCellNo,1)-min(handles.spPos(:,1)))/handles.sliceThickness);%ceil( handles.spPos(handles.SelectedCorrCellNo,1)/handles.sliceThickness);
+% handles=plot_slice_maps(handles);
+% handles = plot_pos_maps(handles);
+% 
+% handles.CellNoToFindinSlice=handles.SelectedCorrCellNo;
+% axes(handles.sliceAx);
+% handles=DrawCirclePointinSlice(handles);
+% 
+% handles.CellNoToFind=handles.SelectedCorrCellNo;
+% axes(handles.slicePosMap);
+% handles=DrawCirclePoint(handles);
+% 
+% guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function CorrCellNoList_CreateFcn(hObject, eventdata, handles)
@@ -1500,29 +1500,29 @@ function pushbutton16_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on selection change in popupmenu4.
-function popupmenu4_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu4
-if get(hObject,'Value')==1
-    handles.SeriestoAllCheck=1;
-    handles.AlltoAllCheck=0;
-    handles.ROItoROICheck=0;
-elseif get(hObject,'Value')==2
-    handles.SeriestoAllCheck=0;
-    handles.AlltoAllCheck=1;
-    handles.ROItoROICheck=0;
-elseif get(hObject,'Value')==3
-    handles.SeriestoAllCheck=0;
-    handles.AlltoAllCheck=0;
-    handles.ROItoROICheck=1;
-end
-guidata(hObject,handles);
+% 
+% % --- Executes on selection change in popupmenu4.
+% function popupmenu4_Callback(hObject, eventdata, handles)
+% % hObject    handle to popupmenu4 (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu4 contents as cell array
+% %        contents{get(hObject,'Value')} returns selected item from popupmenu4
+% if get(hObject,'Value')==1
+%     handles.SeriestoAllCheck=1;
+%     handles.AlltoAllCheck=0;
+%     handles.ROItoROICheck=0;
+% elseif get(hObject,'Value')==2
+%     handles.SeriestoAllCheck=0;
+%     handles.AlltoAllCheck=1;
+%     handles.ROItoROICheck=0;
+% elseif get(hObject,'Value')==3
+%     handles.SeriestoAllCheck=0;
+%     handles.AlltoAllCheck=0;
+%     handles.ROItoROICheck=1;
+% end
+% guidata(hObject,handles);
     
 
 % --- Executes during object creation, after setting all properties.
@@ -1897,62 +1897,62 @@ set(handles.StimTSPlot,'XColor',[1 1 1]);
 guidata(hObject,handles);
 
 
-
-% --- Executes on button press in ExportCorr.
-function ExportCorr_Callback(hObject, eventdata, handles)
-% hObject    handle to ExportCorr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-CorrValToSeries=handles.CorrValToSeries;
-CorrCellNoToSeries=handles.CorrCellNoToSeries;
-AllCorrToSeries=handles.AllCorrToSeries;
-AllPValtoSeries=handles.AllPValtoSeries;
-CurrentCorrType=handles.CurrentCorrType;
-CurrentTimeRange=handles.CurrentTimeRange;
-DataTypeUsedForCorr=handles.DataTypeUsedForCorr;
-
-ThresholdUsedForCorrRank=handles.ThresholdUsedForCorrRank;
-CellList_BelowThreshold=handles.CellList_BelowThreshold;
-
-
-[f,path] = uiputfile('CorrResult.mat');
-save([path,f],'CorrValToSeries','CorrCellNoToSeries','AllCorrToSeries','AllPValtoSeries','CurrentCorrType','CurrentTimeRange','DataTypeUsedForCorr','ThresholdUsedForCorrRank','CellList_BelowThreshold');
-guidata(hObject,handles);
-
-
-% --- Executes on button press in LoadCorr.
-function LoadCorr_Callback(hObject, eventdata, handles)
-% hObject    handle to LoadCorr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-[f,path] = uigetfile('*.mat');
-load([path,f]);
-
-handles.CorrValToSeries=CorrValToSeries;
-handles.CorrCellNoToSeries=CorrCellNoToSeries;
-handles.AllCorrToSeries=AllCorrToSeries;
-handles.AllPValtoSeries=AllPValtoSeries;
-
-handles.CurrentCorrType=CurrentCorrType;
-if strcmp(handles.CurrentCorrType,'Spearman')==1
-%     set(handles.CorrTypeSelect,'Value')=1;
-    warndlg('Corr type should be set to Spearman!');
-elseif strcmp(handles.CurrentCorrType,'Pearson')==1
-%     set(handles.CorrTypeSelect,'Value')=2;
-    warndlg('Corr type should be set to Pearson!');
-end
-
-handles.CurrentTimeRange=CurrentTimeRange;
-handles.DataTypeUsedForCorr=DataTypeUsedForCorr;
-handles.ThresholdUsedForCorrRank=ThresholdUsedForCorrRank;
-handles.CellList_BelowThreshold=CellList_BelowThreshold;
-
-StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
-set(handles.CorrCellNoList,'String',StringToDisplay);
-
-guidata(hObject,handles);
+% 
+% % --- Executes on button press in ExportCorr.
+% function ExportCorr_Callback(hObject, eventdata, handles)
+% % hObject    handle to ExportCorr (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% CorrValToSeries=handles.CorrValToSeries;
+% CorrCellNoToSeries=handles.CorrCellNoToSeries;
+% AllCorrToSeries=handles.AllCorrToSeries;
+% AllPValtoSeries=handles.AllPValtoSeries;
+% CurrentCorrType=handles.CurrentCorrType;
+% CurrentTimeRange=handles.CurrentTimeRange;
+% DataTypeUsedForCorr=handles.DataTypeUsedForCorr;
+% 
+% ThresholdUsedForCorrRank=handles.ThresholdUsedForCorrRank;
+% CellList_BelowThreshold=handles.CellList_BelowThreshold;
+% 
+% 
+% [f,path] = uiputfile('CorrResult.mat');
+% save([path,f],'CorrValToSeries','CorrCellNoToSeries','AllCorrToSeries','AllPValtoSeries','CurrentCorrType','CurrentTimeRange','DataTypeUsedForCorr','ThresholdUsedForCorrRank','CellList_BelowThreshold');
+% guidata(hObject,handles);
+% 
+% 
+% % --- Executes on button press in LoadCorr.
+% function LoadCorr_Callback(hObject, eventdata, handles)
+% % hObject    handle to LoadCorr (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% [f,path] = uigetfile('*.mat');
+% load([path,f]);
+% 
+% handles.CorrValToSeries=CorrValToSeries;
+% handles.CorrCellNoToSeries=CorrCellNoToSeries;
+% handles.AllCorrToSeries=AllCorrToSeries;
+% handles.AllPValtoSeries=AllPValtoSeries;
+% 
+% handles.CurrentCorrType=CurrentCorrType;
+% if strcmp(handles.CurrentCorrType,'Spearman')==1
+% %     set(handles.CorrTypeSelect,'Value')=1;
+%     warndlg('Corr type should be set to Spearman!');
+% elseif strcmp(handles.CurrentCorrType,'Pearson')==1
+% %     set(handles.CorrTypeSelect,'Value')=2;
+%     warndlg('Corr type should be set to Pearson!');
+% end
+% 
+% handles.CurrentTimeRange=CurrentTimeRange;
+% handles.DataTypeUsedForCorr=DataTypeUsedForCorr;
+% handles.ThresholdUsedForCorrRank=ThresholdUsedForCorrRank;
+% handles.CellList_BelowThreshold=CellList_BelowThreshold;
+% 
+% StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
+% set(handles.CorrCellNoList,'String',StringToDisplay);
+% 
+% guidata(hObject,handles);
 
 
 % --- Executes on button press in ExportFig.
@@ -1983,155 +1983,155 @@ set(Fig2,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible upon loa
 [f,path] = uiputfile('Figure.fig');
 savefig(Fig2,[path,f]);
 
-
-% --- Executes on button press in CorrMovie.
-function CorrMovie_Callback(hObject, eventdata, handles)
-% hObject    handle to CorrMovie (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-answer=inputdlg({'Printing Range is from how many';'to how many in the list?';'spacing interval?'});
-PrintingRange=[str2num(answer{1,1}),str2num(answer{2,1})];
-SpacingInt=str2num(answer{3,1});
-
-path= uigetdir();
-
-answer2=inputdlg('Is your target series a cell fluo fts? 1 for yes 0 for no');
-if strcmp(answer2{1,1},'1')
-    answer3=inputdlg('What is its cell No?');
-    InputCellNo=str2num(answer3{1,1});
-    answer4=inputdlg('Is it a correlation based on dFF or Fluo? Type dff or fluo');
-    Fig2=figure;
-    if strcmp(answer4{1,1},'dff')||strcmp(answer4{1,1},'dFF')
-        TargetSeries=handles.dFF(str2num(answer3{1,1}),:);
-        plot(1:size(handles.dFF,2),TargetSeries);
-        title(strcat('dFF of cell ',answer3{1,1}));
-        f2=strcat('dFF of cell ',answer3{1,1});
-    elseif strcmp(answer4{1,1},'fluo')||strcmp(answer4{1,1},'Fluo')
-        TargetSeries=handles.fts(str2num(answer3{1,1}),:);
-        plot(1:size(handles.fts,2),TargetSeries);
-        title(strcat('Fluo of cell ',answer3{1,1}));
-        f2=strcat('Fluo of cell ',answer3{1,1});        
-    end
-    savefig(Fig2,strcat(path,'\',f2));
-else
-    answer3=inputdlg('Input Target Series Name');
-    Fig2=figure;
-    plot(1:length(handles.TargetSeries),handles.TargetSeries);
-    f2=strcat('Stim Time Series of ',answer3{1,1});        
-    title(f2);
-    savefig(Fig2,strcat(path,'\',f2,'.fig'));
-end
-
-answer5=inputdlg('Plot first and last top k correlated cells concurrently? 1 for yes; 0 for no; 3 for both');
-
-loopNo=abs(ceil((PrintingRange(2)-PrintingRange(1))/SpacingInt));
-
-
-    Fig3 = figure;
-    ColorBasedOnCorr=handles.CorrValToSeries;
-    NewPos=handles.spPos(handles.CorrCellNoToSeries,:);
-    scatter3(NewPos(:,1),NewPos(:,2),NewPos(:,3),20,ColorBasedOnCorr,'.','hittest','off');
-    hold on
-    if strcmp(answer2{1,1},'1')
-        plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'ko','linewidth',3,'Markersize',10);
-    end
-    colormap jet;
-    grid on
-    axis equal
-    xlabel('X','Color','k');
-    ylabel('Y','Color','k');
-    zlabel('Z','Color','k');
-    CB1=colorbar;
-%     caxis([-0.5 1]);
-    CB1.Label.String='Correlation Coef of Cells (Dots)';
-    tit2= strcat('Total Correlation Map of',answer3{1,1});
-    view(0,90);
-    title(tit2);
-    savefig(Fig3,strcat(path,'\',tit2,'.fig'));
-    
-    
-for i=1:loopNo
-    if PrintingRange(2)-PrintingRange(1)>0
-        selectedCell=handles.CorrCellNoToSeries(PrintingRange(1):(PrintingRange(1)+i*SpacingInt));
-        CurrentCorrVal=handles.CorrValToSeries(PrintingRange(1)+i*SpacingInt);
-        if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
-            AllCellNo=size(handles.CorrCellNoToSeries,1);
-            anti_selectedCell=handles.CorrCellNoToSeries((AllCellNo-i*SpacingInt):AllCellNo);
-            anti_CurrentCorrVal=handles.CorrValToSeries(AllCellNo-i*SpacingInt);
-        end
-    else
-        selectedCell=handles.CorrCellNoToSeries((PrintingRange(1)-i*SpacingInt):PrintingRange(1));
-%         assignin('base','selectedCell',selectedCell);
-        CurrentCorrVal=handles.CorrValToSeries(PrintingRange(1)-i*SpacingInt);
-        if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
-            anti_selectedCell=handles.CorrCellNoToSeries(1:(1+i*SpacingInt));
-            anti_CurrentCorrVal=handles.CorrValToSeries(1+i*SpacingInt);
-        end
-    end
-
-    Fig3 = figure;
-    posB = handles.spPos(handles.labelVector,:);
-    posR = handles.spPos(selectedCell,:);
-    plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
-    hold on;
-    plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
-    if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
-        posG = handles.spPos(anti_selectedCell,:);
-        plot3(posG(:,1),posG(:,2),posG(:,3),'go', 'markerfacecolor','g','markersize',3);
-    end
-    if strcmp(answer2{1,1},'1')
-        plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'bo','linewidth',3,'Markersize',10);
-    end
-    grid on
-    axis equal
-    xlabel('X','Color','k');
-    ylabel('Y','Color','k');
-    zlabel('Z','Color','k');
-    
-    if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
-        tit=strcat('Top ',num2str(PrintingRange(1)+i*SpacingInt),'(Corr>=',num2str(CurrentCorrVal),')and last',num2str(PrintingRange(1)+i*SpacingInt),'(Corr<= ',num2str(anti_CurrentCorrVal),')Correlated Cells of ',answer3{1,1});
-        f=strcat('Top ',num2str(PrintingRange(1)+i*SpacingInt),'and last',num2str(PrintingRange(1)+i*SpacingInt),'Correlated Cells of ',answer3{1,1});
-    else
-        if PrintingRange(2)-PrintingRange(1)>0
-            tit=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1},', Corr>=',num2str(CurrentCorrVal));
-            f=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1});
-        else
-            tit=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1},', Corr<=',num2str(CurrentCorrVal));
-            f=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1});
-        end
-    end
-    view(0,90);
-    title(tit);
-    savefig(Fig3,strcat(path,'\',f,'.fig'));
-    
-    if strcmp(answer5{1,1},'3')
-        Fig3 = figure;
-        posB = handles.spPos(handles.labelVector,:);
-        posR = handles.spPos(selectedCell,:);
-        plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
-        hold on;
-        plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
-        if strcmp(answer2{1,1},'1')
-            plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'bo','linewidth',3,'Markersize',10);
-        end
-        grid on
-        axis equal
-        xlabel('X','Color','k');
-        ylabel('Y','Color','k');
-        zlabel('Z','Color','k');
-        if PrintingRange(2)-PrintingRange(1)>0
-            tit=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1},', Corr>=',num2str(CurrentCorrVal));
-            f=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1});
-        else
-            tit=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1},', Corr<=',num2str(CurrentCorrVal));
-            f=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1});
-        end
-        view(0,90);
-        title(tit);
-        savefig(Fig3,strcat(path,'\',f,'.fig'));
-    end
-    
-end
+% 
+% % --- Executes on button press in CorrMovie.
+% function CorrMovie_Callback(hObject, eventdata, handles)
+% % hObject    handle to CorrMovie (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% answer=inputdlg({'Printing Range is from how many';'to how many in the list?';'spacing interval?'});
+% PrintingRange=[str2num(answer{1,1}),str2num(answer{2,1})];
+% SpacingInt=str2num(answer{3,1});
+% 
+% path= uigetdir();
+% 
+% answer2=inputdlg('Is your target series a cell fluo fts? 1 for yes 0 for no');
+% if strcmp(answer2{1,1},'1')
+%     answer3=inputdlg('What is its cell No?');
+%     InputCellNo=str2num(answer3{1,1});
+%     answer4=inputdlg('Is it a correlation based on dFF or Fluo? Type dff or fluo');
+%     Fig2=figure;
+%     if strcmp(answer4{1,1},'dff')||strcmp(answer4{1,1},'dFF')
+%         TargetSeries=handles.dFF(str2num(answer3{1,1}),:);
+%         plot(1:size(handles.dFF,2),TargetSeries);
+%         title(strcat('dFF of cell ',answer3{1,1}));
+%         f2=strcat('dFF of cell ',answer3{1,1});
+%     elseif strcmp(answer4{1,1},'fluo')||strcmp(answer4{1,1},'Fluo')
+%         TargetSeries=handles.fts(str2num(answer3{1,1}),:);
+%         plot(1:size(handles.fts,2),TargetSeries);
+%         title(strcat('Fluo of cell ',answer3{1,1}));
+%         f2=strcat('Fluo of cell ',answer3{1,1});        
+%     end
+%     savefig(Fig2,strcat(path,'\',f2));
+% else
+%     answer3=inputdlg('Input Target Series Name');
+%     Fig2=figure;
+%     plot(1:length(handles.TargetSeries),handles.TargetSeries);
+%     f2=strcat('Stim Time Series of ',answer3{1,1});        
+%     title(f2);
+%     savefig(Fig2,strcat(path,'\',f2,'.fig'));
+% end
+% 
+% answer5=inputdlg('Plot first and last top k correlated cells concurrently? 1 for yes; 0 for no; 3 for both');
+% 
+% loopNo=abs(ceil((PrintingRange(2)-PrintingRange(1))/SpacingInt));
+% 
+% 
+%     Fig3 = figure;
+%     ColorBasedOnCorr=handles.CorrValToSeries;
+%     NewPos=handles.spPos(handles.CorrCellNoToSeries,:);
+%     scatter3(NewPos(:,1),NewPos(:,2),NewPos(:,3),20,ColorBasedOnCorr,'.','hittest','off');
+%     hold on
+%     if strcmp(answer2{1,1},'1')
+%         plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'ko','linewidth',3,'Markersize',10);
+%     end
+%     colormap jet;
+%     grid on
+%     axis equal
+%     xlabel('X','Color','k');
+%     ylabel('Y','Color','k');
+%     zlabel('Z','Color','k');
+%     CB1=colorbar;
+% %     caxis([-0.5 1]);
+%     CB1.Label.String='Correlation Coef of Cells (Dots)';
+%     tit2= strcat('Total Correlation Map of',answer3{1,1});
+%     view(0,90);
+%     title(tit2);
+%     savefig(Fig3,strcat(path,'\',tit2,'.fig'));
+%     
+%     
+% for i=1:loopNo
+%     if PrintingRange(2)-PrintingRange(1)>0
+%         selectedCell=handles.CorrCellNoToSeries(PrintingRange(1):(PrintingRange(1)+i*SpacingInt));
+%         CurrentCorrVal=handles.CorrValToSeries(PrintingRange(1)+i*SpacingInt);
+%         if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
+%             AllCellNo=size(handles.CorrCellNoToSeries,1);
+%             anti_selectedCell=handles.CorrCellNoToSeries((AllCellNo-i*SpacingInt):AllCellNo);
+%             anti_CurrentCorrVal=handles.CorrValToSeries(AllCellNo-i*SpacingInt);
+%         end
+%     else
+%         selectedCell=handles.CorrCellNoToSeries((PrintingRange(1)-i*SpacingInt):PrintingRange(1));
+% %         assignin('base','selectedCell',selectedCell);
+%         CurrentCorrVal=handles.CorrValToSeries(PrintingRange(1)-i*SpacingInt);
+%         if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
+%             anti_selectedCell=handles.CorrCellNoToSeries(1:(1+i*SpacingInt));
+%             anti_CurrentCorrVal=handles.CorrValToSeries(1+i*SpacingInt);
+%         end
+%     end
+% 
+%     Fig3 = figure;
+%     posB = handles.spPos(handles.labelVector,:);
+%     posR = handles.spPos(selectedCell,:);
+%     plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
+%     hold on;
+%     plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
+%     if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
+%         posG = handles.spPos(anti_selectedCell,:);
+%         plot3(posG(:,1),posG(:,2),posG(:,3),'go', 'markerfacecolor','g','markersize',3);
+%     end
+%     if strcmp(answer2{1,1},'1')
+%         plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'bo','linewidth',3,'Markersize',10);
+%     end
+%     grid on
+%     axis equal
+%     xlabel('X','Color','k');
+%     ylabel('Y','Color','k');
+%     zlabel('Z','Color','k');
+%     
+%     if strcmp(answer5{1,1},'1')||strcmp(answer5{1,1},'3')
+%         tit=strcat('Top ',num2str(PrintingRange(1)+i*SpacingInt),'(Corr>=',num2str(CurrentCorrVal),')and last',num2str(PrintingRange(1)+i*SpacingInt),'(Corr<= ',num2str(anti_CurrentCorrVal),')Correlated Cells of ',answer3{1,1});
+%         f=strcat('Top ',num2str(PrintingRange(1)+i*SpacingInt),'and last',num2str(PrintingRange(1)+i*SpacingInt),'Correlated Cells of ',answer3{1,1});
+%     else
+%         if PrintingRange(2)-PrintingRange(1)>0
+%             tit=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1},', Corr>=',num2str(CurrentCorrVal));
+%             f=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1});
+%         else
+%             tit=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1},', Corr<=',num2str(CurrentCorrVal));
+%             f=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1});
+%         end
+%     end
+%     view(0,90);
+%     title(tit);
+%     savefig(Fig3,strcat(path,'\',f,'.fig'));
+%     
+%     if strcmp(answer5{1,1},'3')
+%         Fig3 = figure;
+%         posB = handles.spPos(handles.labelVector,:);
+%         posR = handles.spPos(selectedCell,:);
+%         plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
+%         hold on;
+%         plot3(posR(:,1),posR(:,2),posR(:,3),'ro', 'markerfacecolor','r','markersize',3);
+%         if strcmp(answer2{1,1},'1')
+%             plot3(handles.spPos(InputCellNo,1),handles.spPos(InputCellNo,2),handles.spPos(InputCellNo,3),'bo','linewidth',3,'Markersize',10);
+%         end
+%         grid on
+%         axis equal
+%         xlabel('X','Color','k');
+%         ylabel('Y','Color','k');
+%         zlabel('Z','Color','k');
+%         if PrintingRange(2)-PrintingRange(1)>0
+%             tit=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1},', Corr>=',num2str(CurrentCorrVal));
+%             f=strcat('Top ',num2str(PrintingRange(1)),' to ',num2str(PrintingRange(1)+i*SpacingInt),' Correlated Cells of ',answer3{1,1});
+%         else
+%             tit=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1},', Corr<=',num2str(CurrentCorrVal));
+%             f=strcat('Top ',num2str(PrintingRange(1)-(loopNo-i)*SpacingInt),' to ',num2str(PrintingRange(1)),' Correlated Cells of ',answer3{1,1});
+%         end
+%         view(0,90);
+%         title(tit);
+%         savefig(Fig3,strcat(path,'\',f,'.fig'));
+%     end
+%     
+% end
 
 
 % current_roi = handles.roiMaster.Value;
@@ -2667,3 +2667,19 @@ update_roiMasterList(handles);
 handles = display_roiListbox(handles);
 guidata(hObject,handles);
 
+
+
+% --- Executes on button press in update_bait_checkbox.
+function update_bait_checkbox_Callback(hObject, eventdata, handles)
+% hObject    handle to update_bait_checkbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of update_bait_checkbox
+
+
+% --- Executes on button press in generate_bait_sequence.
+function generate_bait_sequence_Callback(hObject, eventdata, handles)
+% hObject    handle to generate_bait_sequence (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
