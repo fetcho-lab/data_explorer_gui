@@ -158,9 +158,11 @@ else
     handles.labelVector(1:end) = 1;
 end
 
-handles.ColorOfDots= max(handles.fts');%set color of dots to each cells' highest fluo value.
-handles.caxis0.String = num2str( min(handles.ColorOfDots), '%4.0f' );
-handles.caxis1.String = num2str( max (handles.ColorOfDots), '%4.0f' );
+handles.neuron.value= max(handles.fts');%set color of dots to each cells' highest fluo value.
+handles.neuron.metric = 'Maximum Raw Fluo Intensity';
+
+handles.caxis0.String = num2str( min(handles.neuron.value), '%4.0f' );
+handles.caxis1.String = num2str( max (handles.neuron.value), '%4.0f' );
 
 handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
@@ -391,7 +393,7 @@ if handles.PlotSelect.Value==1
     % plot3(posR(:,1),posR(:,2),posR(:,3),'r.');
     %----Cui Edit----
     posAllCell=handles.spPos;
-    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.ColorOfDots,'.','hittest','off', 'Parent', handles.slicePosMap);
+    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.neuron.value,'.','hittest','off', 'Parent', handles.slicePosMap);
     colormap(handles.slicePosMap, 'jet');
     caxis(handles.slicePosMap, [str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
     CB1=colorbar('peer', handles.slicePosMap);
