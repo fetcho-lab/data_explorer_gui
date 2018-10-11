@@ -54,6 +54,20 @@ function CXYsDataExplorer_Copied2_OpeningFcn(hObject, eventdata, handles, vararg
 
 % Choose default command line output for CXYsDataExplorer_Copied2
 handles.output = hObject;
+handles.fts = varargin{1};
+handles.spPos = varargin{2};
+handles.Sc = varargin{3};
+handles.FileName = '';
+handles.currentfile = '';
+handles.SizeOfDots=20;%Set default dot size here
+
+global AllPosition %Defined a global here!
+AllPosition=handles.spPos;
+
+set(handles.FileName,'String',filepath);
+assignin('base', 'handles0',handles);
+handles = PlotCurrentTimepointMap(handles);
+handles = PlotHeatMap(handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -104,13 +118,13 @@ handles.spPos = spPos;
 % global AllPosition %Defined a global here!
 % AllPosition=spPos;
 handles.Sc = Sc;
-handles.SizeOfDots=20;%Set default dot size here
+% handles.SizeOfDots=20;%Set default dot size here
 global AllPosition %Defined a global here!
 AllPosition=spPos;
 set(handles.FileName,'String',filepath);
 assignin('base', 'handles0',handles);
 handles = PlotCurrentTimepointMap(handles);
-handles = PlotHeatMap(handles)
+handles = PlotHeatMap(handles);
 
 function handles=PlotCurrentTimepointMap(handles)
 axes(handles.TPMap), cla
