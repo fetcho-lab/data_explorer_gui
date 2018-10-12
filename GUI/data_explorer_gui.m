@@ -76,6 +76,8 @@ handles.sPMap_Ax_roi = [];
 handles.cell_roi_list = [];
 handles.posmap_img = [];
 
+handles.bait_sequence = []; %bait sequence for correlational analysis
+
 handles.im=[];
 
 handles.timeListener=addlistener(handles.sliceSelector,'ContinuousValueChange',@sliceSelector_Callback);
@@ -370,10 +372,15 @@ xlabel(handles.dffPlot, 'Stack#', 'color', 'w');
 title(handles.dffPlot, 'Fluorescence Time Series', 'color', [1 1 1]);
 set(handles.dffPlot,'FontUnits','points','FontSize',10);
 
+if handles.update_bait_checkbox.Value
+    handles.bait_sequence = traceMean;
+end
+
 cla(handles.StimTSPlot);
-plot(handles.StimTSPlot, traceMean, 'k');
+plot(handles.StimTSPlot, handles.bait_sequence, 'k');
 ylabel(handles.StimTSPlot, 'Mean', 'color','w');
 set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+
 % handles.dffPlot = gca;
 
 function handles = plot_pos_maps(handles)
@@ -807,24 +814,24 @@ handles.cell_roi_list = [];
 roi_members_cell_no = find(handles.roi(handles.roiMaster.Value(1)).members);
 handles.SelectedROI = roi_members_cell_no( get(hObject, 'Value') );
 
-%-----------Display Corr List------------------
-if handles.AlltoAllCheck==1
-    [CorrVal handles.CorrCellNo]=sort(handles.Allcor(:,handles.SelectedROI),'descend');
-    assignin('base','CorrCellNo',handles.CorrCellNo);
-    DistList=DistOfVectorsToVectors(handles.spPos(handles.SelectedROI,:), handles.spPos(handles.CorrCellNo,:));
-    StringToDisplay=strcat(num2str(handles.CorrCellNo),' -',num2str(CorrVal),' - ',num2str(DistList));
-    set(handles.CorrCellNoList,'String',StringToDisplay);
-elseif handles.ROItoROICheck==1
-    SelectedROIRowNo=get(hObject,'Value');
-	[CorrVal handles.CorrCellNo]=sort(handles.ROIcor(:,SelectedROIRowNo),'descend');
-%     assignin('base','CorrCellNo',CorrCellNo);
-    DistList=DistOfVectorsToVectors(handles.spPos(handles.SelectedROI,:), handles.spPos(handles.CorrCellNo,:));
-%     StringToDisplay=strcat(num2str(C orrCellNo),' -',num2str(CorrVal));
-
-    StringToDisplay=strcat(num2str(handles.CurrentRoiList(handles.CorrCellNo)),'  -',num2str(CorrVal),' - ',num2str(DistList));
-    set(handles.CorrCellNoList,'String',StringToDisplay);
-    assignin('base','CorrCellNOList',num2str(handles.CurrentRoiList(handles.CorrCellNo)));
-end
+% %-----------Display Corr List------------------
+% if handles.AlltoAllCheck==1
+%     [CorrVal handles.CorrCellNo]=sort(handles.Allcor(:,handles.SelectedROI),'descend');
+%     assignin('base','CorrCellNo',handles.CorrCellNo);
+%     DistList=DistOfVectorsToVectors(handles.spPos(handles.SelectedROI,:), handles.spPos(handles.CorrCellNo,:));
+%     StringToDisplay=strcat(num2str(handles.CorrCellNo),' -',num2str(CorrVal),' - ',num2str(DistList));
+%     set(handles.CorrCellNoList,'String',StringToDisplay);
+% elseif handles.ROItoROICheck==1
+%     SelectedROIRowNo=get(hObject,'Value');
+% 	[CorrVal handles.CorrCellNo]=sort(handles.ROIcor(:,SelectedROIRowNo),'descend');
+% %     assignin('base','CorrCellNo',CorrCellNo);
+%     DistList=DistOfVectorsToVectors(handles.spPos(handles.SelectedROI,:), handles.spPos(handles.CorrCellNo,:));
+% %     StringToDisplay=strcat(num2str(C orrCellNo),' -',num2str(CorrVal));
+% 
+%     StringToDisplay=strcat(num2str(handles.CurrentRoiList(handles.CorrCellNo)),'  -',num2str(CorrVal),' - ',num2str(DistList));
+%     set(handles.CorrCellNoList,'String',StringToDisplay);
+%     assignin('base','CorrCellNOList',num2str(handles.CurrentRoiList(handles.CorrCellNo)));
+% end
 guidata(hObject,handles);
 
 
@@ -2683,3 +2690,4 @@ function generate_bait_sequence_Callback(hObject, eventdata, handles)
 % hObject    handle to generate_bait_sequence (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+disp('hi!');
