@@ -2690,4 +2690,12 @@ function generate_bait_sequence_Callback(hObject, eventdata, handles)
 % hObject    handle to generate_bait_sequence (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-disp('hi!');
+handles.update_bait_checkbox.Value = false;
+current_roi = handles.roiMaster.Value(1);
+handles.bait_sequence = mean(handles.fts(handles.roi(current_roi).members, :), 2);
+cla(handles.StimTSPlot);
+plot(handles.StimTSPlot, handles.bait_sequence, 'k');
+ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+guidata(hObject, handles);
+
