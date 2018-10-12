@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 11-Oct-2018 13:43:01
+% Last Modified by GUIDE v2.5 12-Oct-2018 11:51:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1240,40 +1240,56 @@ msgbox({'All Correlation Calculated!'});
 guidata(hObject,handles);
 
 % --------------------------------------------------------------------
-function Corr_ROItoROI_Callback(hObject, eventdata, handles)
-% hObject    handle to Corr_ROItoROI (see GCBO)
+function correlate_to_roi_Callback(hObject, eventdata, handles)
+% hObject    handle to correlate_to_roi (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
 
-CurrentROIString=get(handles.roiListbox,'String');
+% CurrentROIString=get(handles.roiListbox,'String');
 % assignin('base','CurrentROIString',CurrentROIString);
-handles.CurrentRoiList=find(handles.roi(handles.roiMaster.Value(1)).members);
-% assignin('base','CurrentRoiList',handles.CurrentRoiList);
+select_roi = handles.roiMaster.Value(1);
+current_roi_members = handles.roi(select_roi).members;
+% assignin('base','CurrentRoiList',current_roi);
+metric = zeros(size(handles.fts,1),1);
+pvalues = metric+NaN;
 
+metric_name = [handles.roi(select_roi).name];
+
+if strcmp(handles.CurrentCorrType,'Pearson')
+    metric_name = ['Pearson_Corr_', metric_name];
+elseif strcmp(handles.CurrentCorrType,'Spearman')
+    metric_name = ['Spearman_Corr_', metric_name];
+end
 
 if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
+    metric_name = [metric_name, '_dFF'];
     if isnan(handles.dFF)
         warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
     else
         print1='Calculating...';
         disp(print1);
         if strcmp(handles.CurrentCorrType,'Pearson')
-            [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Pearson(handles.dFF(handles.CurrentRoiList,:));
+%             [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Pearson(handles.dFF(current_roi,:));
+              [Rho, P] = corr(handles.bait_sequence', handles.dFF(current_roi_members,:)', 'type', 'Pearson');
         elseif strcmp(handles.CurrentCorrType,'Spearman')
-            [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Spearman(handles.dFF(handles.CurrentRoiList,:));
+%             [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Spearman(handles.dFF(current_roi,:));
+              [Rho, P] = corr(handles.bait_sequence', handles.dFF(current_roi_members,:)', 'type', 'Spearman');
         else
             warndlg('Wrong function input! Please select Spearmn or Pearson');
         end
     end
 
 elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
+    metric_name = [metric_name, '_fluo'];
     print1='Calculating...';
     disp(print1);
     if strcmp(handles.CurrentCorrType,'Pearson')
-        [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Pearson(handles.fts(handles.CurrentRoiList,:));
+%         [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Pearson(handles.fts(current_roi,:));
+          [Rho, P] = corr(handles.bait_sequence', handles.fts(current_roi_members,:)', 'type', 'Pearson');
     elseif strcmp(handles.CurrentCorrType,'Spearman')
-        [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Spearman(handles.fts(handles.CurrentRoiList,:));
+%         [handles.ROIcor, handles.ROIPVal]=TopCorrCellInGroup_Spearman(handles.fts(current_roi,:));
+          [Rho, P] = corr(handles.bait_sequence', handles.fts(current_roi_members,:)', 'type', 'Spearman');
     else
         warndlg('Wrong function input! Please select Spearmn or Pearson');
     end
@@ -1282,11 +1298,18 @@ else
     warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
 end
 
+handles.metric.name = metric_name;
+metric(current_roi_members) = Rho;
+handles.metric.value = metric;
+
+pvalues(current_roi_members) = P;
+handles.metric.pval = pvalues;
+
 % assignin('base','ROIMaxcorno',handles.ROIMaxcorno);
 % assignin('base','ROIMaxcorval',handles.ROIMaxcorval);
-% assignin('base','ROI',handles.CurrentRoiList);
+% assignin('base','ROI',current_roi);
 % assignin('base','ROIcor',handles.ROIcor);
-msgbox({'All Correlation Calculated!'});
+msgbox({'Done Correlating!'});
 guidata(hObject,handles);
 
 
@@ -2692,7 +2715,7 @@ function generate_bait_sequence_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.update_bait_checkbox.Value = false;
 current_roi = handles.roiMaster.Value(1);
-handles.bait_sequence = mean(handles.fts(handles.roi(current_roi).members, :), 2);
+handles.bait_sequence = mean(handles.fts(handles.roi(current_roi).members, :), 1);
 cla(handles.StimTSPlot);
 plot(handles.StimTSPlot, handles.bait_sequence, 'k');
 ylabel(handles.StimTSPlot, 'Mean', 'color','w');
