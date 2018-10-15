@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 15-Oct-2018 12:13:41
+% Last Modified by GUIDE v2.5 15-Oct-2018 12:58:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -130,6 +130,7 @@ end
 
 if exist('roi','var')
     handles.roi=roi;
+    update_roiMasterList(handles);
     handles = display_roiListbox(handles);
 else
     handles.roi=[];
@@ -139,8 +140,6 @@ else
     handles = display_roiListbox(handles);
     update_roiMasterList(handles);
 end
-
-
 
 % handles.roi = zeros(size(spPos,1),1,'logical');
 
@@ -160,16 +159,37 @@ else
     handles.labelVector(1:end) = 1;
 end
 
-handles.metric.value = max(handles.fts');%set color of dots to each cells' highest fluo value.
-handles.metric.stats = [];
-handles.metric.description = 'Maximum Raw Fluo Intensity';
+if exist('metric', 'var')
+    handles.metric = metric;
+    set(handles.metric_listbox, 'String', {handles.metric.description});
+else
+    handles.metric.value = max(handles.fts');%set color of dots to each cells' highest fluo value.
+    handles.metric.stats = [];
+    handles.metric.description = 'Maximum Raw Fluo Intensity';
+end
 
-handles.caxis0.String = num2str( min(handles.metric.value), '%4.0f' );
-handles.caxis1.String = num2str( max (handles.metric.value), '%4.0f' );
+handles.caxis0.String = num2str( min(handles.metric(1).value), '%4.0f' );
+handles.caxis1.String = num2str( max (handles.metric(1).value), '%4.0f' );
 
 handles = plot_slice_maps(handles);
 handles = plot_pos_maps(handles);
 handles = plot_fts_in_slice(handles);
+
+function saveDataset(handles)
+%saves data set and outputs a message
+[filename, path] = uiputfile('*.mat', 'Save Current Analysis as...');
+
+spPos = handles.spPos;
+Sc = handles.Sc;
+cellSegmentation = handles.cellSegmentation;
+spRadiiXYZ = handles.spRadiiXYZ;
+dFF = handles.dFF;
+roi = handles.roi;
+metric = handles.metric;
+fluorescence_time_series = handles.fts;
+
+save([path,filename], 'fluorescence_time_series', 'spPos', 'Sc', 'cellSegmentation', 'spRadiiXYZ', 'dFF', 'roi', 'metric', '-v7.3');
+disp('Done saving analysis!');
 
 
 function handles = get_linear_range(handles)
@@ -1317,7 +1337,7 @@ pvalues(current_roi_members) = P;
 metric.stats.pval = pvalues;
 
 handles.metric = [handles.metric, metric];
-set(handles.metric_listbox, 'String', {handles.metric.description}, 'Value', numel(handles.metric.description));
+set(handles.metric_listbox, 'String', {handles.metric.description});
 
 % assignin('base','ROIMaxcorno',handles.ROIMaxcorno);
 % assignin('base','ROIMaxcorval',handles.ROIMaxcorval);
@@ -2787,3 +2807,11 @@ function metric_listbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --------------------------------------------------------------------
+function save_data_menu_Callback(hObject, eventdata, handles)
+% hObject    handle to save_data_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+saveDataset(handles);
