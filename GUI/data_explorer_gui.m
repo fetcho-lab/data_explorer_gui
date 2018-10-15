@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 15-Oct-2018 11:50:25
+% Last Modified by GUIDE v2.5 15-Oct-2018 12:13:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -161,6 +161,7 @@ else
 end
 
 handles.metric.value = max(handles.fts');%set color of dots to each cells' highest fluo value.
+handles.metric.stats = [];
 handles.metric.description = 'Maximum Raw Fluo Intensity';
 
 handles.caxis0.String = num2str( min(handles.metric.value), '%4.0f' );
@@ -401,8 +402,10 @@ if handles.PlotSelect.Value==1
     % plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
     % plot3(posR(:,1),posR(:,2),posR(:,3),'r.');
     %----Cui Edit----
+    
+    currentMetric = handles.metric_listbox.Value(1);
     posAllCell=handles.spPos;
-    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.metric.value,'.','hittest','off', 'Parent', handles.slicePosMap);
+    scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.metric(currentMetric).value,'.','hittest','off', 'Parent', handles.slicePosMap);
     colormap(handles.slicePosMap, 'jet');
     caxis(handles.slicePosMap, [str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
     CB1=colorbar('peer', handles.slicePosMap);
@@ -1195,51 +1198,51 @@ function Untitled_1_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
-function Corr_AlltoAll_Callback(hObject, eventdata, handles)
-% hObject    handle to Corr_AlltoAll (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
-    if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
-        if isnan(handles.dFF)
-            warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
-        else
-            print1='Calculating...';
-            disp(print1);
-            if strcmp(handles.CurrentCorrType,'Pearson')
-                [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.dFF);
-            elseif strcmp(handles.CurrentCorrType,'Spearman')
-                [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Spearman(handles.dFF);                
-            else
-                warndlg('Wrong function input! Please select Spearmn or Pearson');
-            end
-        end
-        
-    elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
-        print1='Calculating...';
-        disp(print1);
-        if strcmp(handles.CurrentCorrType,'Pearson')
-            [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.fts);            
-        elseif strcmp(handles.CurrentCorrType,'Spearman')
-            [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.fts);            
-        else
-            warndlg('Wrong function input! Please select Spearmn or Pearson');
-        end
-        
-    else
-        warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
-end
-
-    
-% assignin('base','AllMaxcorno',handles.AllMaxcorno);
-% assignin('base','AllMaxcorval',handles.AllMaxcorval);
-% assignin('base','Allcor',handles.Allcor);
-% msgbox({'All Correlation Calculated!' 'Stored in handles.AllMaxcorval and handles.AllMaxcorno' 'You can also check AllMaxcorval & AllMaxcorno in the base workspace'});
-msgbox({'All Correlation Calculated!'});
-guidata(hObject,handles);
+% 
+% % --------------------------------------------------------------------
+% function Corr_AlltoAll_Callback(hObject, eventdata, handles)
+% % hObject    handle to Corr_AlltoAll (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% 
+% answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
+%     if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
+%         if isnan(handles.dFF)
+%             warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
+%         else
+%             print1='Calculating...';
+%             disp(print1);
+%             if strcmp(handles.CurrentCorrType,'Pearson')
+%                 [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.dFF);
+%             elseif strcmp(handles.CurrentCorrType,'Spearman')
+%                 [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Spearman(handles.dFF);                
+%             else
+%                 warndlg('Wrong function input! Please select Spearmn or Pearson');
+%             end
+%         end
+%         
+%     elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
+%         print1='Calculating...';
+%         disp(print1);
+%         if strcmp(handles.CurrentCorrType,'Pearson')
+%             [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.fts);            
+%         elseif strcmp(handles.CurrentCorrType,'Spearman')
+%             [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.fts);            
+%         else
+%             warndlg('Wrong function input! Please select Spearmn or Pearson');
+%         end
+%         
+%     else
+%         warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
+% end
+% 
+%     
+% % assignin('base','AllMaxcorno',handles.AllMaxcorno);
+% % assignin('base','AllMaxcorval',handles.AllMaxcorval);
+% % assignin('base','Allcor',handles.Allcor);
+% % msgbox({'All Correlation Calculated!' 'Stored in handles.AllMaxcorval and handles.AllMaxcorno' 'You can also check AllMaxcorval & AllMaxcorno in the base workspace'});
+% msgbox({'All Correlation Calculated!'});
+% guidata(hObject,handles);
 
 % --------------------------------------------------------------------
 function correlate_to_roi_Callback(hObject, eventdata, handles)
@@ -1259,8 +1262,8 @@ end
 select_roi = handles.roiMaster.Value(1);
 current_roi_members = handles.roi(select_roi).members;
 % assignin('base','CurrentRoiList',current_roi);
-metric = zeros(size(handles.fts,1),1) + NaN;
-pvalues = metric+NaN;
+metric.value = zeros(size(handles.fts,1),1) + NaN;
+pvalues = metric.value+NaN;
 
 metric_name = [handles.roi(select_roi).name];
 
@@ -1306,12 +1309,15 @@ else
     warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
 end
 
-handles.metric.name = metric_name;
-metric(current_roi_members) = Rho;
-handles.metric.value = metric;
+metric.description = metric_name;
+metric.value(current_roi_members) = Rho;
+% metric.value = metric;
 
 pvalues(current_roi_members) = P;
-handles.metric.pval = pvalues;
+metric.stats.pval = pvalues;
+
+handles.metric = [handles.metric, metric];
+set(handles.metric_listbox, 'String', {handles.metric.description}, 'Value', numel(handles.metric.description));
 
 % assignin('base','ROIMaxcorno',handles.ROIMaxcorno);
 % assignin('base','ROIMaxcorval',handles.ROIMaxcorval);
@@ -1322,7 +1328,7 @@ guidata(hObject,handles);
 
 
 % --------------------------------------------------------------------
-function Untitled_5_Callback(hObject, eventdata, handles)
+% function Untitled_5_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2758,3 +2764,26 @@ function save_bait_menu_Callback(hObject, eventdata, handles)
 bait_sequence = handles.bait_sequence;
 save([path,f], 'bait_sequence');
 disp('Saved bait sequence!');
+
+
+% --- Executes on selection change in metric_listbox.
+function metric_listbox_Callback(hObject, eventdata, handles)
+% hObject    handle to metric_listbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns metric_listbox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from metric_listbox
+
+
+% --- Executes during object creation, after setting all properties.
+function metric_listbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to metric_listbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
