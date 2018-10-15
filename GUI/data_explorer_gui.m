@@ -1259,7 +1259,7 @@ end
 select_roi = handles.roiMaster.Value(1);
 current_roi_members = handles.roi(select_roi).members;
 % assignin('base','CurrentRoiList',current_roi);
-metric = zeros(size(handles.fts,1),1);
+metric = zeros(size(handles.fts,1),1) + NaN;
 pvalues = metric+NaN;
 
 metric_name = [handles.roi(select_roi).name];
