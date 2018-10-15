@@ -1246,7 +1246,13 @@ function correlate_to_roi_Callback(hObject, eventdata, handles)
 % hObject    handle to correlate_to_roi (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
+% answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
+
+if (handles.raw_trace_selector.Value == 0) && (handles.heatmap_selector.Value == 0) && ~isnan(handles.dFF)
+    correlate_mode = 'dff';
+else
+    correlate_mode = 'fluo';
+end
 
 % CurrentROIString=get(handles.roiListbox,'String');
 % assignin('base','CurrentROIString',CurrentROIString);
@@ -1264,7 +1270,7 @@ elseif strcmp(handles.CurrentCorrType,'Spearman')
     metric_name = ['Spearman_Corr_', metric_name];
 end
 
-if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
+if strcmp(correlate_mode,'dff')||strcmp(correlate_mode,'dFF')
     metric_name = [metric_name, '_dFF'];
     if isnan(handles.dFF)
         warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
@@ -1282,7 +1288,7 @@ if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
         end
     end
 
-elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
+elseif strcmp(correlate_mode,'fluo')||strcmp(correlate_mode,'Fluo')
     metric_name = [metric_name, '_fluo'];
     print1='Calculating...';
     disp(print1);
@@ -1321,98 +1327,98 @@ function Untitled_5_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
-function Corr_SeriesToAll_Callback(hObject, eventdata, handles)
-% hObject    handle to Corr_SeriesToAll (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-%-------------Load Target Files-------------
-[SeriesFile,SeriesFilePath] = uigetfile('.mat','Please select fluorescence time series .mat file');
-cd(SeriesFilePath);
-SeriesFileDirectory= [SeriesFilePath,SeriesFile];
-SeriesFile=load(SeriesFileDirectory);
-
-answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
-answer2 = inputdlg('Do you want to only consider certain range of frames for correlation? If yes please type 1, otherwise type whatever else.','Time Range?');
-if strcmp(answer2{1,1},'1')
-    answer3=inputdlg({'Lower Time Range','Upper Time Range'});
-    LowerTimeRange=str2num(answer3{1,1});
-    UpperTimeRange=str2num(answer3{2,1});
-else
-    LowerTimeRange=1;
-    UpperTimeRange=size(handles.fts,2);
-end
-
-SeriesFile_Cell=struct2cell(SeriesFile);
-TargetSeries=SeriesFile_Cell{1,1};
-handles.TargetSeries=TargetSeries;
-
-answer4= inputdlg('Threshold of dFF or Fluo? If no threshold, type 0');
-threshold=str2num(answer4{1,1});
-
-%----------Save some variables for export------------
-handles.CurrentTimeRange=[LowerTimeRange,UpperTimeRange];
-handles.DataTypeUsedForCorr=answer1{1,1};
-guidata(hObject,handles);
-
-%------------Calculating part----------------
-k=size(handles.fts,1);%Here I set the program to display the correlation of all cells to input series. Change here if you only want to see top K ones.
-
-TargetSeriesNo=size(TargetSeries,1);%Change here if your target series are more than one.
-
-% plot(1:length(SeriesFile.StimTimeSeries),SeriesFile.StimTimeSeries,'Parent',handles.StimTSPlot);
-plot(1:length(TargetSeries),TargetSeries,'Parent',handles.StimTSPlot);
-xLimits = get(handles.dffPlot,'XLim');
-set(handles.StimTSPlot,'XLim',xLimits);
-set(handles.StimTSPlot,'XColor',[1 1 1]);
-        if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
-            if isnan(handles.dFF)
-                warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
-            else
-                print1='Calculating...';
-                disp(print1);
-                if strcmp(handles.CurrentCorrType,'Pearson')
-                    assignin('base','inputfts',handles.dFF(:,LowerTimeRange:UpperTimeRange));
-                    assignin('base','inputseries',TargetSeries(:,LowerTimeRange:UpperTimeRange));
-                    [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Pearson(handles.dFF(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);                    
-                elseif strcmp(handles.CurrentCorrType,'Spearman')
-                    [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Spearman(handles.dFF(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
-                else
-                    warndlg('Wrong function input! Please select Spearmn or Pearson');
-                end
-            end
-%             handles.CorrValToSeries=handles.CorrValToSeries';handles.CorrCellNoToSeries=handles.CorrCellNoToSeries'; 
-%             handles.AllCorrToSeries=handles.AllCorrToSeries';handles.AllPValtoSeries=handles.AllPValtoSeries';
-
-            StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
-            set(handles.CorrCellNoList,'String',StringToDisplay);
-        elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
-            print1='Calculating...';
-            disp(print1);
-            if strcmp(handles.CurrentCorrType,'Pearson')
-                [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Pearson(handles.fts(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
-            elseif strcmp(handles.CurrentCorrType,'Spearman');
-                [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Spearman(handles.fts(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
-            else
-                warndlg('Wrong function input! Please select Spearmn or Pearson');
-            end
-%             handles.CorrValToSeries=handles.CorrValToSeries';handles.CorrCellNoToSeries=handles.CorrCellNoToSeries';
-%             handles.AllCorrToSeries=handles.AllCorrToSeries';handles.AllPValtoSeries=handles.AllPValtoSeries';
-
-            StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
-            set(handles.CorrCellNoList,'String',StringToDisplay);
-
-        else
-            warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
-        end
-    assignin('base','FilteredOutCellList',LowdFFList);
-    msgbox({strcat('Calculation Done! ',num2str(size(LowdFFList,1)),' cells were excluded for correlation rank (for detail check FilteredOutCellList in base workspace). Result displayed in Correlation Listbox')});
-%----------Save some variables for export.2------------
-    handles.ThresholdUsedForCorrRank=threshold;
-    handles.CellList_BelowThreshold=LowdFFList;
- guidata(hObject,handles);
-
+% 
+% % --------------------------------------------------------------------
+% function Corr_SeriesToAll_Callback(hObject, eventdata, handles)
+% % hObject    handle to Corr_SeriesToAll (see GCBO)
+% % eventdata  reserved - to be defined in a future version of MATLAB
+% % handles    structure with handles and user data (see GUIDATA)
+% %-------------Load Target Files-------------
+% [SeriesFile,SeriesFilePath] = uigetfile('.mat','Please select fluorescence time series .mat file');
+% cd(SeriesFilePath);
+% SeriesFileDirectory= [SeriesFilePath,SeriesFile];
+% SeriesFile=load(SeriesFileDirectory);
+% 
+% answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
+% answer2 = inputdlg('Do you want to only consider certain range of frames for correlation? If yes please type 1, otherwise type whatever else.','Time Range?');
+% if strcmp(answer2{1,1},'1')
+%     answer3=inputdlg({'Lower Time Range','Upper Time Range'});
+%     LowerTimeRange=str2num(answer3{1,1});
+%     UpperTimeRange=str2num(answer3{2,1});
+% else
+%     LowerTimeRange=1;
+%     UpperTimeRange=size(handles.fts,2);
+% end
+% 
+% SeriesFile_Cell=struct2cell(SeriesFile);
+% TargetSeries=SeriesFile_Cell{1,1};
+% handles.TargetSeries=TargetSeries;
+% 
+% answer4= inputdlg('Threshold of dFF or Fluo? If no threshold, type 0');
+% threshold=str2num(answer4{1,1});
+% 
+% %----------Save some variables for export------------
+% handles.CurrentTimeRange=[LowerTimeRange,UpperTimeRange];
+% handles.DataTypeUsedForCorr=answer1{1,1};
+% guidata(hObject,handles);
+% 
+% %------------Calculating part----------------
+% k=size(handles.fts,1);%Here I set the program to display the correlation of all cells to input series. Change here if you only want to see top K ones.
+% 
+% TargetSeriesNo=size(TargetSeries,1);%Change here if your target series are more than one.
+% 
+% % plot(1:length(SeriesFile.StimTimeSeries),SeriesFile.StimTimeSeries,'Parent',handles.StimTSPlot);
+% plot(1:length(TargetSeries),TargetSeries,'Parent',handles.StimTSPlot);
+% xLimits = get(handles.dffPlot,'XLim');
+% set(handles.StimTSPlot,'XLim',xLimits);
+% set(handles.StimTSPlot,'XColor',[1 1 1]);
+%         if strcmp(answer1{1,1},'dff')||strcmp(answer1{1,1},'dFF')
+%             if isnan(handles.dFF)
+%                 warndlg('dFF of this dataset is not calculated yet, please calculate dFF first! Or use Fluo for correlation instead.','No dFF calculated')
+%             else
+%                 print1='Calculating...';
+%                 disp(print1);
+%                 if strcmp(handles.CurrentCorrType,'Pearson')
+%                     assignin('base','inputfts',handles.dFF(:,LowerTimeRange:UpperTimeRange));
+%                     assignin('base','inputseries',TargetSeries(:,LowerTimeRange:UpperTimeRange));
+%                     [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Pearson(handles.dFF(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);                    
+%                 elseif strcmp(handles.CurrentCorrType,'Spearman')
+%                     [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Spearman(handles.dFF(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
+%                 else
+%                     warndlg('Wrong function input! Please select Spearmn or Pearson');
+%                 end
+%             end
+% %             handles.CorrValToSeries=handles.CorrValToSeries';handles.CorrCellNoToSeries=handles.CorrCellNoToSeries'; 
+% %             handles.AllCorrToSeries=handles.AllCorrToSeries';handles.AllPValtoSeries=handles.AllPValtoSeries';
+% 
+%             StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
+%             set(handles.CorrCellNoList,'String',StringToDisplay);
+%         elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
+%             print1='Calculating...';
+%             disp(print1);
+%             if strcmp(handles.CurrentCorrType,'Pearson')
+%                 [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Pearson(handles.fts(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
+%             elseif strcmp(handles.CurrentCorrType,'Spearman');
+%                 [handles.CorrValToSeries, handles.CorrCellNoToSeries, handles.AllCorrToSeries, handles.AllPValtoSeries,LowdFFList]=TopkCorr_Spearman(handles.fts(:,LowerTimeRange:UpperTimeRange), TargetSeries(:,LowerTimeRange:UpperTimeRange), TargetSeriesNo, k,threshold);
+%             else
+%                 warndlg('Wrong function input! Please select Spearmn or Pearson');
+%             end
+% %             handles.CorrValToSeries=handles.CorrValToSeries';handles.CorrCellNoToSeries=handles.CorrCellNoToSeries';
+% %             handles.AllCorrToSeries=handles.AllCorrToSeries';handles.AllPValtoSeries=handles.AllPValtoSeries';
+% 
+%             StringToDisplay=strcat(num2str(handles.CorrCellNoToSeries),' -',num2str(handles.CorrValToSeries),' -',num2str(handles.AllPValtoSeries));
+%             set(handles.CorrCellNoList,'String',StringToDisplay);
+% 
+%         else
+%             warndlg('Wrong data type input! Please type dff or fluo, case unsensitive');
+%         end
+%     assignin('base','FilteredOutCellList',LowdFFList);
+%     msgbox({strcat('Calculation Done! ',num2str(size(LowdFFList,1)),' cells were excluded for correlation rank (for detail check FilteredOutCellList in base workspace). Result displayed in Correlation Listbox')});
+% %----------Save some variables for export.2------------
+%     handles.ThresholdUsedForCorrRank=threshold;
+%     handles.CellList_BelowThreshold=LowdFFList;
+%  guidata(hObject,handles);
+% 
 
 % 
 % % --- Executes on selection change in CorrCellNoList.
@@ -2703,7 +2709,7 @@ guidata(hObject,handles);
 function handles =  plot_bait_sequence(handles)
 cla(handles.StimTSPlot);
 plot(handles.StimTSPlot, handles.bait_sequence, 'k');
-ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+ylabel(handles.StimTSPlot, 'Bait', 'color','w');
 set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
 
 % --- Executes on button press in update_bait_checkbox.
@@ -2713,7 +2719,6 @@ function update_bait_checkbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of update_bait_checkbox
-
 
 % --- Executes on button press in generate_bait_sequence.
 function generate_bait_sequence_Callback(hObject, eventdata, handles)
@@ -2729,7 +2734,6 @@ handles.bait_sequence = mean(handles.fts(handles.roi(current_roi).members, :), 1
 % set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
 handles =  plot_bait_sequence(handles);
 guidata(hObject, handles);
-
 
 
 % --------------------------------------------------------------------
