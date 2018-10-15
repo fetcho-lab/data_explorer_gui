@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 12-Oct-2018 11:51:56
+% Last Modified by GUIDE v2.5 15-Oct-2018 11:50:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -376,10 +376,12 @@ if handles.update_bait_checkbox.Value
     handles.bait_sequence = traceMean;
 end
 
-cla(handles.StimTSPlot);
-plot(handles.StimTSPlot, handles.bait_sequence, 'k');
-ylabel(handles.StimTSPlot, 'Mean', 'color','w');
-set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+% cla(handles.StimTSPlot);
+% plot(handles.StimTSPlot, handles.bait_sequence, 'k');
+% ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+% set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+handles =  plot_bait_sequence(handles);
+
 
 % handles.dffPlot = gca;
 
@@ -2698,6 +2700,11 @@ handles = display_roiListbox(handles);
 guidata(hObject,handles);
 
 
+function handles =  plot_bait_sequence(handles)
+cla(handles.StimTSPlot);
+plot(handles.StimTSPlot, handles.bait_sequence, 'k');
+ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
 
 % --- Executes on button press in update_bait_checkbox.
 function update_bait_checkbox_Callback(hObject, eventdata, handles)
@@ -2716,9 +2723,34 @@ function generate_bait_sequence_Callback(hObject, eventdata, handles)
 handles.update_bait_checkbox.Value = false;
 current_roi = handles.roiMaster.Value(1);
 handles.bait_sequence = mean(handles.fts(handles.roi(current_roi).members, :), 1);
-cla(handles.StimTSPlot);
-plot(handles.StimTSPlot, handles.bait_sequence, 'k');
-ylabel(handles.StimTSPlot, 'Mean', 'color','w');
-set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+% cla(handles.StimTSPlot);
+% plot(handles.StimTSPlot, handles.bait_sequence, 'k');
+% ylabel(handles.StimTSPlot, 'Mean', 'color','w');
+% set(handles.StimTSPlot, 'XTick', [], 'YTick', []);
+handles =  plot_bait_sequence(handles);
 guidata(hObject, handles);
 
+
+
+% --------------------------------------------------------------------
+function load_bait_menu_Callback(hObject, eventdata, handles)
+% hObject    handle to load_bait_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[seq_file, path] = uigetfile('.mat', 'Select file containinng variable called bait_sequence');
+load([path,seq_file]);
+handles.bait_sequence = bait_sequence;
+handles.update_bait_checkbox.Value = false;
+handles =  plot_bait_sequence(handles);
+guidata(hObject, handles);
+
+
+% --------------------------------------------------------------------
+function save_bait_menu_Callback(hObject, eventdata, handles)
+% hObject    handle to save_bait_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[f,path] = uiputfile('saved_bait_sequence.mat');
+bait_sequence = handles.bait_sequence;
+save([path,f], 'bait_sequence');
+disp('Saved bait sequence!');
