@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 15-Oct-2018 12:58:07
+% Last Modified by GUIDE v2.5 15-Oct-2018 14:04:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -2815,3 +2815,17 @@ function save_data_menu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 saveDataset(handles);
+
+
+% --------------------------------------------------------------------
+function threshold_metric_menu_Callback(hObject, eventdata, handles)
+% hObject    handle to threshold_metric_menu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[thresholded, thname] = metric_threshold_gui(handles);
+new_roi.name = thname;
+new_roi.members = thresholded;
+handles = update_roi(handles, new_roi, 'add');
+update_roiMasterList(handles);
+handles = display_roiListbox(handles);
+guidata(hObject, handles);
