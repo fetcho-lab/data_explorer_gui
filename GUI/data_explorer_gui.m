@@ -383,7 +383,7 @@ elseif get(handles.dFF_heatmap,'Value')
     end
 
     for y = 1:numel(handles.dffPlot.YTickLabel)
-        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.XTickLabel{y}];
+        handles.dffPlot.YTickLabel{y} = ['\color{white}' handles.dffPlot.YTickLabel{y}];
     end
     
     traceMean = mean(handles.dFF(cellSelect,:),1);
@@ -413,69 +413,68 @@ function handles = plot_pos_maps(handles)
 
 %%%%%
 %%%%%
+currentMetric = handles.metric_listbox.Value(1);
+posAllCell=handles.spPos;
 
 if handles.PlotSelect.Value==1
     cla(handles.slicePosMap)
     hold(handles.slicePosMap, 'on')
-    % posB = handles.spPos(handles.labelVector & ~handles.inSlice,:);
-    % posR = handles.spPos(handles.labelVector & handles.inSlice,:);
-    % plot3(posB(:,1),posB(:,2),posB(:,3),'k.');
-    % plot3(posR(:,1),posR(:,2),posR(:,3),'r.');
-    %----Cui Edit----
-    
-    currentMetric = handles.metric_listbox.Value(1);
-    posAllCell=handles.spPos;
+
     scatter3(posAllCell(:,1),posAllCell(:,2),posAllCell(:,3),10,handles.metric(currentMetric).value,'.','hittest','off', 'Parent', handles.slicePosMap);
     colormap(handles.slicePosMap, 'jet');
     caxis(handles.slicePosMap, [str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
     CB1=colorbar('peer', handles.slicePosMap);
     CB1.Color='w';
     
-    % CB1.Label.String='Max Fluorescence Intensity of Cells (Dots)';
     posR_C = handles.spPos( handles.inSlice,:);
     plot3(posR_C(:,1),posR_C(:,2),posR_C(:,3),'k.','Parent', handles.slicePosMap);
     grid(handles.slicePosMap, 'on');
     xlabel(handles.slicePosMap, 'X','Color','w');
     ylabel(handles.slicePosMap,'Y','Color','w');
     zlabel(handles.slicePosMap,'Z','Color','w');
-    
-    % set(gca,'color',[0 0 0]);
-    %----Cui Edit End----
+
     grid(handles.slicePosMap, 'on');
     axis(handles.slicePosMap, 'equal');
+    
     if get(handles.CellFinderStay,'Value')==1
         handles=DrawCirclePoint_Special(hObject,handles);
     end
+    set(handles.slicePosMap,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
 elseif handles.PlotSelect.Value==2
         current_roi = handles.roiMaster.Value;    
         cla(handles.slicePosMap);
-
-        posB = handles.spPos(handles.labelVector,:);
-        poz = handles.spPos;
-%         assignin('base','CellNoToDisp',CellNoToDisp);
-%         assignin('base','spPos',handles.spPos);
-%         poz = handles.spPos(CellNoToDisp,:);
-%         if isfield(handles,'DispColor')==0
-%             ColorR='r';
-%         else
-%             ColorR =handles.DispColor(CellNoToDisp,:);
-%             assignin('base','ColorR',ColorR);
-%             assignin('base','poz',poz);
-%         end
-        plot3(posB(:,1),posB(:,2),posB(:,3),'k.','Parent', handles.slicePosMap);
-%         plot3(poz(:,1),poz(:,2),poz(:,3),'ro', 'markerfacecolor','r','markersize',3);
-%         ColorBarlim = caxis;
-        caxis(handles.slicePosMap, [0 100]);
-%         CB2=colorbar;
-%         CB2.Color='w';
-%         ColorList=(ColorR./100).*(ColorBarlim(2)-ColorBarlim(1))+ColorBarlim(1)
-
-        cmapz = hsv(handles.roiMaster.Max);
-        for r=1:numel(current_roi)
-            mberz = handles.roi(current_roi(r)).members;
-            scatter3(poz(mberz,1),poz(mberz,2),poz(mberz,3),500,cmapz(current_roi(r),:),'.', 'Parent', handles.slicePosMap);
+        
+        if numel(current_roi) > 1
+            cmapz = hsv(handles.roiMaster.Max);
+            for r=1:numel(current_roi)
+                mberz = handles.roi(current_roi(r)).members;
+                scatter3(posAllCell(mberz,1),posAllCell(mberz,2),posAllCell(mberz,3),10,cmapz(current_roi(r),:),'.', 'Parent', handles.slicePosMap);
+            end
+        else
+            mberz = handles.roi(current_roi).members;
+            scatter3(posAllCell(mberz,1),posAllCell(mberz,2),posAllCell(mberz,3),10,handles.metric(currentMetric).value(mberz),'.','hittest','off', 'Parent', handles.slicePosMap);
         end
+        
         grid(handles.slicePosMap, 'on');
+        grid(handles.slicePosMap, 'minor');
+        handles.slicePosMap.GridColor = 'k';
+        
+        xticks(handles.slicePosMap, 'auto');
+        yticks(handles.slicePosMap, 'auto');
+        zticks(handles.slicePosMap, 'auto');
+        
+        for x = 1:numel(handles.slicePosMap.XTickLabel)
+            handles.slicePosMap.XTickLabel{x} = ['\color{white}' handles.slicePosMap.XTickLabel{x}];
+        end
+
+        for y = 1:numel(handles.slicePosMap.YTickLabel)
+            handles.slicePosMap.YTickLabel{y} = ['\color{white}' handles.slicePosMap.YTickLabel{y}];
+        end
+        
+        for z = 1:numel(handles.slicePosMap.ZTickLabel)
+            handles.slicePosMap.ZTickLabel{z} = ['\color{white}' handles.slicePosMap.ZTickLabel{z}];
+        end
+    
         axis(handles.slicePosMap, 'equal');
 
         currentLim = get(handles.slicePosMap,'YLim');
@@ -489,7 +488,7 @@ elseif handles.PlotSelect.Value==2
         end
         axis equal
         axis tight
-
+        caxis(handles.slicePosMap, [str2double(handles.caxis0.String),str2double(handles.caxis1.String)])
         sK = handles.currentSlice;
         handles.SliceMap_gLine{1} = plot([RCSegmentation(sK),RCSegmentation(sK)], currentLim, 'g', 'Parent', handles.slicePosMap);
         handles.SliceMap_gLine{2} = plot([RCSegmentation(sK+1),RCSegmentation(sK+1)], currentLim, 'g', 'Parent', handles.slicePosMap);
@@ -528,8 +527,9 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
     pause(0.005);
 %     colormap(gca, 'jet');
 %     caxis('auto');
+    set(handles.slicePosMap,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
 end
-set(handles.slicePosMap,'TickLength',[0,0],'XTick',[],'YTick',[],'ZTick',[],'FontUnits','normalized','FontSize',0.05);
+
 
 function handles = plot_slice_maps(handles)
 
