@@ -2283,10 +2283,19 @@ elseif strcmp(eventdata.Key, 'r')
 elseif strcmp(eventdata.Key, 'u') %take union of highlighted sets
     highlight = handles.roiMaster.Value;
     union = handles.roi(current_roi).members;
+    
+    if size(union,2) > size(union,1) %make sure that the two are nx1 column arrays!!
+        union = union';
+    end
+    
     set_name = handles.roi(current_roi).name;
     
     for m = 2:numel(highlight)
-        union = union | handles.roi(highlight(m)).members;
+        toUnion = handles.roi(highlight(m)).members;
+        if size(toUnion,2) > size(toUnion,1)
+            toUnion = toUnion';
+        end
+        union = union | toUnion;
         set_name = [set_name,'_U_',handles.roi(highlight(m)).name];
     end
     
@@ -2298,10 +2307,20 @@ elseif strcmp(eventdata.Key, 'u') %take union of highlighted sets
 elseif strcmp(eventdata.Key, 'i') %take intersection of highlighted setss
     highlight = handles.roiMaster.Value;
     intersection = handles.roi(current_roi).members;
+    
+    if size(intersection,2) > size(intersection,1)%make sure that the two are nx1 column arrays!!
+        intersection = intersection';
+    end
+    
     set_name = handles.roi(current_roi).name;
     
     for m = 2:numel(highlight)
-        intersection = intersection & handles.roi(highlight(m)).members;
+        toIntersect = handles.roi(highlight(m)).members;
+        if size(toIntersect,2) > size(toIntersect,1)
+            toIntersect = toIntersect';
+        end
+        
+        intersection = intersection & toIntersect;
         set_name = [set_name,'_N_',handles.roi(highlight(m)).name];
     end
     
