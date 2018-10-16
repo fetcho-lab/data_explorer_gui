@@ -2279,92 +2279,36 @@ elseif strcmp(eventdata.Key, 'r')
     newROIname=answer0{1,1};
 %     newROISize=size(handles.roi,2)+1;
     handles.roi(current_roi).name = newROIname;
-% elseif strcmp(eventdata.Character,'v')
-%     answer1=inputdlg('What color do you want this ROI group to be plotted? please input 0 to 100 digit.');
-% 
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=str2num(answer1{1,1});
-%     assignin('base','DispColor',handles.DispColor);
-% %     
-% %     namestr = cellstr(get(hObject, 'String'));
-% %     validx = get(hObject, 'Value');
-% %     newstr = regexprep(namestr{validx}, '"red"','"green"');
-% %     namestr{validx} = newstr;
-% %     set(hObject, 'String', namestr);
-% 
-%     guidata(hObject,handles);
-%     
-% elseif strcmp(eventdata.Character,'p')%Rythmic Neurons-spike like
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=76;
-% elseif strcmp(eventdata.Character,'m')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=85;
-% elseif strcmp(eventdata.Character,'b')%Rythmic Neurons-wave like
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=60;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'y')%Responding Cells
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=18;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'o')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=10;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'g')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=35;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'r')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=0;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'n')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=50;
-%     assignin('base','DispColor',handles.DispColor);
-%     %---------------------------
-% elseif strcmp(eventdata.Character,'1')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=10;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'2')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=20;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'3')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=30;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'4')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=40;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'5')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=50;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'6')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=60;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'7')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=70;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'8')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=80;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'9')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=90;
-%     assignin('base','DispColor',handles.DispColor);
-% elseif strcmp(eventdata.Character,'0')
-%     roi = find(handles.roi(current_roi).members);
-%     handles.DispColor(roi)=0;
-%     assignin('base','DispColor',handles.DispColor);
+    
+elseif strcmp(eventdata.Key, 'u') %take union of highlighted sets
+    highlight = handles.roiMaster.Value;
+    union = handles.roi(current_roi).members;
+    set_name = handles.roi(current_roi).name;
+    
+    for m = 2:numel(highlight)
+        union = union | handles.roi(highlight(m)).members;
+        set_name = [set_name,'_U_',handles.roi(highlight(m)).name];
+    end
+    
+    roi.name = set_name;
+    roi.members = union;
+    
+    handles = update_roi(handles, roi, 'add');
+    
+elseif strcmp(eventdata.Key, 'i') %take intersection of highlighted setss
+    highlight = handles.roiMaster.Value;
+    intersection = handles.roi(current_roi).members;
+    set_name = handles.roi(current_roi).name;
+    
+    for m = 2:numel(highlight)
+        intersection = intersection & handles.roi(highlight(m)).members;
+        set_name = [set_name,'_N_',handles.roi(highlight(m)).name];
+    end
+    
+    roi.name = set_name;
+    roi.members = intersection;
+    
+    handles = update_roi(handles, roi, 'add');
 end
 update_roiMasterList(handles);
 handles = display_roiListbox(handles);
