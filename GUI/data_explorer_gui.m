@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 15-Oct-2018 14:04:33
+% Last Modified by GUIDE v2.5 16-Oct-2018 08:20:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1337,8 +1337,8 @@ pvalues(current_roi_members) = P;
 metric.stats.pval = pvalues;
 
 handles.metric = [handles.metric, metric];
-set(handles.metric_listbox, 'String', {handles.metric.description});
-
+% set(handles.metric_listbox, 'String', {handles.metric.description});
+update_metric_listbox(handles);
 % assignin('base','ROIMaxcorno',handles.ROIMaxcorno);
 % assignin('base','ROIMaxcorval',handles.ROIMaxcorval);
 % assignin('base','ROI',current_roi);
@@ -2781,4 +2781,36 @@ new_roi.members = thresholded;
 handles = update_roi(handles, new_roi, 'add');
 update_roiMasterList(handles);
 handles = display_roiListbox(handles);
+guidata(hObject, handles);
+
+function update_metric_listbox(handles)
+%updates the roiMaster listbox with current information
+set(handles.metric_listbox,'String', {handles.metric.description});
+handles.metric_listbox.Max = numel(handles.roi);
+if isempty(handles.metric_listbox.Value(1)) || handles.metric_listbox.Value(end) > handles.metric_listbox.Max
+    handles.metric_listbox.Value = handles.metric_listbox.Max;
+end
+
+% --- Executes on key press with focus on metric_listbox and none of its controls.
+function metric_listbox_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to metric_listbox (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+current_metric_select = handles.metric_listbox.Value;
+metric = handles.metric;
+
+if strcmp(eventdata.Key, 'delete') || strcmp(eventdata.Key, 'backspace')
+    metric(current_metric_select) = [];
+elseif strcmp(eventdata.Key, 'r')
+    answer0=inputdlg('What would you like to rename this metric?');
+    new_description=answer0{1,1};
+%     newROISize=size(handles.roi,2)+1;
+    metric(current_metric_select(1)).description = new_description;
+end
+
+handles.metric = metric;
+update_metric_listbox(handles);
 guidata(hObject, handles);
