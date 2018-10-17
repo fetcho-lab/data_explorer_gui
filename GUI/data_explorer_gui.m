@@ -113,8 +113,11 @@ handles.cellSegmentation = cellSegmentation;
 
 if exist('spRadiiXYZ','var')
     handles.spRadiiXYZ = spRadiiXYZ;
+    handles.z_ellipse_map = calculate_exact_cell_radii_by_plane(handles.spPos, handles.spRadiiXYZ, handles.Sc);
 else
+    warndlg('spots radii were not found');
     handles.spRadiiXYZ = NaN;
+    handles.z_ellipse_map = NaN;
 end
 
 global AllPosition %Defined a global here!!!!!
@@ -520,7 +523,9 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
     
     if numel(handles.cell_roi_list) > 0 
         cxy = handles.spPos(handles.cell_roi_list,1:2)/handles.Sc(1,1);
-        rxy = handles.spRadiiXYZ(handles.cell_roi_list,1)/handles.Sc(1,1);
+%         rxy = handles.spRadiiXYZ(handles.cell_roi_list,1)/handles.Sc(1,1);
+        zLvl = round( get(handles.cellSelector, 'Value') );
+        rxy = handles.z_ellipse_map(handles.cell_roi_list, zLvl);
         handles.sPMap_Ax_roi = viscircles(handles.slicePosMap, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
     end
     
@@ -616,7 +621,8 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
            roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
            if sum(roi_in_slice) > 0
                cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
-               rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
+%                rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
+               rxy = handles.z_ellipse_map(roi_in_slice, zLvl);
                handles.sAx_roi = viscircles(handles.sliceAx, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
            end
            drawnow;
