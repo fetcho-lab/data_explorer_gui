@@ -2781,7 +2781,13 @@ function metric_listbox_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns metric_listbox contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from metric_listbox
-
+current_value = get(hObject,'Value');
+current_value = current_value(1);
+map = handles.metric(current_value).value;
+handles.caxis0.String = num2str(min(map));
+handles.caxis1.String = num2str(prctile(map,99.9));
+handles = plot_pos_maps(handles);
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function metric_listbox_CreateFcn(hObject, eventdata, handles)
