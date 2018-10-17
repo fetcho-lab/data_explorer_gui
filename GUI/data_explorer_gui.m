@@ -1271,8 +1271,15 @@ function correlate_to_roi_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 % answer1 = inputdlg('What data do you want to calculate correlation with? Type dff for dF/F, fluo for fluorescence.','dFF or Fluo');
 
-if (handles.raw_trace_selector.Value == 0) && (handles.heatmap_selector.Value == 0) && ~isnan(handles.dFF)
-    correlate_mode = 'dff';
+if (handles.raw_trace_selector.Value == 0) && (handles.heatmap_selector.Value == 0)
+    
+    if numel(handles.dFF) > 1
+        correlate_mode = 'dff';
+    else
+        warndlg('dFF has not been calculated. Using fluorescence');
+        correlate_mode = 'fluo';
+    end
+    
 else
     correlate_mode = 'fluo';
 end
