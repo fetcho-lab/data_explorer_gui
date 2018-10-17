@@ -312,6 +312,7 @@ if isfield(handles,'CirclePointinSlice')
 end
 
 handles.CirclePointinSlice=plot3(handles.spPos(handles.CellNoToFindinSlice,1), handles.spPos(handles.CellNoToFindinSlice,2),handles.spPos(handles.CellNoToFindinSlice,3),'bo','linewidth',3,'Markersize',10,'hittest', 'off', 'Parent',handles.sliceAx);
+handles.ClickCellNo.String = num2str(handles.CellNoToFindinSlice);
 % set(handles.CirclePointinSlice, 'ButtonDownFcn', handles.sliceAx.ButtonDownFcn);
 % guidata(hObject,handles);
 % assignin('base','circinslice',handles.CirclePointinSlice);
@@ -323,6 +324,7 @@ if isfield(handles,'CirclePoint')
     delete(handles.CirclePoint);
 end
 handles.CirclePoint=plot3(handles.spPos(handles.CellNoToFind,1), handles.spPos(handles.CellNoToFind,2),handles.spPos(handles.CellNoToFind,3),'wo','linewidth',3,'Markersize',10);
+handles.ClickCellNo.String = num2str(handles.CellNoToFind);
 
 function handles=plotfts(handles, cellSelect)
 %plots fluorescent time series on the time series plot
@@ -785,13 +787,13 @@ handles = cellSelector_Callback(handles.cellSelector,eventdata,handles);
 
 set(handles.ClickCellNo,'String',num2str(handles.cellSelect_idx));
 
-if size(handles.roi,2)>1
-    for i=1:size(handles.roi,2)
-        if handles.roi(i).members(handles.cellSelect_idx)==1
-            set(handles.CateNo,'String',num2str(i));
-        end
-    end
-end
+% if size(handles.roi,2)>1
+%     for i=1:size(handles.roi,2)
+%         if handles.roi(i).members(handles.cellSelect_idx)==1
+%             set(handles.CateNo,'String',num2str(i));
+%         end
+%     end
+% end
 
 guidata(hObject,handles);
 
