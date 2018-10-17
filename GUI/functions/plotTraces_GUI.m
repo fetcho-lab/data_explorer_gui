@@ -21,7 +21,9 @@ ymax = max(trace_visualization(:));
 
 % ylim([-spacing, vWindow*spacing]);
 set(ax, 'XLim', [1, size(traces,2)])
-set(ax, 'YLim', [ymin, ymax]);
+if  ~isnan(ymin) && ~ isnan(ymax)
+    set(ax, 'YLim', [ymin, ymax]);
+end
 set(ax, 'XTickMode', 'auto', 'YTickMode', 'auto');
 axis(ax, 'normal');
 % if ~isempty(varargin) && strcmp(varargin{1},'Label')

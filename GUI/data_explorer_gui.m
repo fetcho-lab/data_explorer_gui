@@ -2812,8 +2812,8 @@ guidata(hObject, handles);
 function update_metric_listbox(handles)
 %updates the roiMaster listbox with current information
 set(handles.metric_listbox,'String', {handles.metric.description});
-handles.metric_listbox.Max = numel(handles.roi);
-if isempty(handles.metric_listbox.Value(1)) || handles.metric_listbox.Value(end) > handles.metric_listbox.Max
+handles.metric_listbox.Max = numel(handles.metric);
+if isempty(handles.metric_listbox.Value(1)) || ( handles.metric_listbox.Value(end) > handles.metric_listbox.Max )
     handles.metric_listbox.Value = handles.metric_listbox.Max;
 end
 
