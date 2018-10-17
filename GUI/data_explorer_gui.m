@@ -2615,7 +2615,11 @@ function caxis0_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of caxis0 as text
 %        str2double(get(hObject,'String')) returns contents of caxis0 as a double
-
+handles = plot_pos_maps(handles);
+if handles.PlotSelect.Value == 3
+    handles=plot_slice_maps(handles);
+end
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function caxis0_CreateFcn(hObject, eventdata, handles)
@@ -2638,7 +2642,11 @@ function caxis1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of caxis1 as text
 %        str2double(get(hObject,'String')) returns contents of caxis1 as a double
-
+handles = plot_pos_maps(handles);
+if handles.PlotSelect.Value == 3
+    handles=plot_slice_maps(handles);
+end
+guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function caxis1_CreateFcn(hObject, eventdata, handles)
