@@ -2683,6 +2683,7 @@ inZ = handles.z_ellipse_map(:,zLvl) > 0;
 handles.roiListbox.Value = find(inZ);
 uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
+handles = plot_pos_maps(handles);
 guidata(hObject, handles);
 
 
@@ -2705,6 +2706,7 @@ inRECTZ = inRectangleX & inRectangleY & inZ;
 handles.roiListbox.Value = find(inRECTZ);
 uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
+handles = plot_pos_maps(handles);
 guidata(hObject, handles);       
 
 
