@@ -2544,7 +2544,7 @@ fs = filesep;
 disp('Reading file...');
 tic; handles.currView = readImage([path,fs,file]); toc;
 handles = reset_slider_handles(handles);
-
+handles = plot_pos_maps(handles);
 guidata(hObject, handles);
 
 function handles = reset_slider_handles(handles)
@@ -2612,7 +2612,7 @@ handles = guidata(hObject);
 tic; handles.zStack = readImage([path,filesep,file]); toc; 
 handles = reset_slider_handles(handles);
 handles.calling_function = 'Load Z';
-plot_slice_maps(handles);
+handles = plot_slice_maps(handles);
 guidata(hObject, handles);
 
 
