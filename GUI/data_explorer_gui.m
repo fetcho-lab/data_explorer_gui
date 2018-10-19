@@ -617,7 +617,8 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
            imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
         end
            title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
-           inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
+%            inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
+           inZ = handles.z_ellipse_map(:,zLvl) > 0;
            roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
            if sum(roi_in_slice) > 0
                cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
@@ -2677,7 +2678,8 @@ function throw_roi_button_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 zLvl = round( get(handles.cellSelector, 'Value') );
 roi_z = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,3);
-inZ = round( roi_z/handles.microns_per_z ) == zLvl;
+% inZ = round( roi_z/handles.microns_per_z ) == zLvl;
+inZ = handles.z_ellipse_map(:,zLvl) > 0;
 handles.roiListbox.Value = find(inZ);
 uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
@@ -2694,7 +2696,9 @@ h = getrect(handles.sliceAx);
 h = h*handles.Sc(1);
 zLvl = round( get(handles.cellSelector, 'Value') );
 roiPos = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,:);
-inZ = round( roiPos(:,3)/handles.microns_per_z ) == zLvl;
+% inZ = round( roiPos(:,3)/handles.microns_per_z ) == zLvl;
+inZ = handles.z_ellipse_map(:,zLvl) > 0;
+
 inRectangleX = [roiPos(:,1) > h(1) ] & [roiPos(:,1) < (h(1) + h(3))];
 inRectangleY = [roiPos(:,2) > h(2) ] & [roiPos(:,2) < (h(2) + h(4))];
 inRECTZ = inRectangleX & inRectangleY & inZ;
