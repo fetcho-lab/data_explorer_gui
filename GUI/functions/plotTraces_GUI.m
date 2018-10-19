@@ -21,7 +21,7 @@ ymax = max(trace_visualization(:));
 
 % ylim([-spacing, vWindow*spacing]);
 set(ax, 'XLim', [1, size(traces,2)])
-if  ~isnan(ymin) && ~ isnan(ymax)
+if  ( ~isnan(ymin) && ~ isnan(ymax) ) && (ymin ~= ymax)
     set(ax, 'YLim', [ymin, ymax]);
 end
 set(ax, 'XTickMode', 'auto', 'YTickMode', 'auto');
