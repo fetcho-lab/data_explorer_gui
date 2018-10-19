@@ -2627,6 +2627,7 @@ function caxis0_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of caxis0 as a double
 handles = plot_pos_maps(handles);
 if handles.PlotSelect.Value == 3
+    handles.calling_function = 'caxis';
     handles=plot_slice_maps(handles);
 end
 guidata(hObject, handles);
@@ -2654,6 +2655,7 @@ function caxis1_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of caxis1 as a double
 handles = plot_pos_maps(handles);
 if handles.PlotSelect.Value == 3
+    handles.calling_function = 'caxis';
     handles=plot_slice_maps(handles);
 end
 guidata(hObject, handles);
