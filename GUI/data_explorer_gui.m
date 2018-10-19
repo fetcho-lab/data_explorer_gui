@@ -515,7 +515,7 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
 
     cla(handles.slicePosMap);
     handles.posmap_img = imshow(handles.currView(:,:,currentT), climz, 'Parent', handles.slicePosMap);
-
+    set(handles.slicePosMap, 'YDir', 'normal');
     if isempty(handles.cell_roi_list) && sum(handles.roi(handles.roiMaster.Value(1)).members) > 0
         roi_members_cell_no = find(handles.roi(handles.roiMaster.Value(1)).members);
         handles.cell_roi_list = roi_members_cell_no(handles.roiListbox.Value);
@@ -616,6 +616,7 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
            cla(handles.sliceAx);
            imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
         end
+        set(handles.sliceAx, 'YDir', 'normal');
            title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
 %            inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
            inZ = handles.z_ellipse_map(:,zLvl) > 0;
