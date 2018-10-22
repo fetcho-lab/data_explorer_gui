@@ -2682,7 +2682,7 @@ handles = guidata(hObject);
 zLvl = round( get(handles.cellSelector, 'Value') );
 roi_z = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,3);
 % inZ = round( roi_z/handles.microns_per_z ) == zLvl;
-inZ = handles.z_ellipse_map(:,zLvl) > 0;
+inZ = handles.z_ellipse_map(handles.roi(handles.roiMaster.Value(1)).members,zLvl) > 0;
 handles.roiListbox.Value = find(inZ);
 uicontrol(handles.roiListbox);
 handles.cell_roi_list = [];
