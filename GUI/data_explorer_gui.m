@@ -22,7 +22,7 @@ function varargout = data_explorer_gui(varargin)
 
 % Edit the above text to modify the response to help data_explorer_gui
 
-% Last Modified by GUIDE v2.5 16-Oct-2018 08:20:44
+% Last Modified by GUIDE v2.5 22-Oct-2018 14:40:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -603,19 +603,33 @@ if handles.PlotSelect.Value < 3
     set(handles.sliceAx,'hittest','on');
     
 elseif ~strcmp(handles.calling_function, 'sliceSelector')
+    
     if ~isempty(handles.zStack)
            zLvl = round( get(handles.cellSelector, 'Value') );
            climz = [str2double(handles.caxis0.String), str2double(handles.caxis1.String)];
         if isnan(climz(1))
-           imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
+            
+           imshow(handles.mskScreen, 'Parent', handles.sliceAx);
+           zImg = imshow(handles.zStack(:,:,zLvl), [50 1000], 'Parent', handles.sliceAx); 
+           
            caxis(handles.sliceAx, 'auto');
            climz = get(handles.sliceAx, 'CLim');
            handles.caxis0.String = num2str(climz(1), '%4.0f');
            handles.caxis1.String = num2str(climz(2), '%4.0f');       
         else
            cla(handles.sliceAx);
-           imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
+           if handles.voxel_mask.Value == 1
+               imshow(handles.mskScreen, 'Parent', handles.sliceAx);
+           end
+           zImg = imshow(handles.zStack(:,:,zLvl), climz, 'Parent', handles.sliceAx); 
         end
+        
+       if handles.voxel_mask.Value == 1
+           set(zImg, 'AlphaData', ~handles.maskedPixels(:,:,zLvl) );
+       else
+           set(zImg, 'AlphaData', 1);
+       end
+           
         set(handles.sliceAx, 'YDir', 'normal');
            title(handles.sliceAx,sprintf('Z=%3.0f',zLvl));
 %            inZ = round( handles.spPos(:,3)/handles.microns_per_z ) == zLvl;
@@ -1748,6 +1762,7 @@ if get(hObject, 'Value') < 3
     set(handles.load_z_stack, 'Visible', 'off');
     set(handles.throw_roi_button, 'Visible', 'off');
     set(handles.roi_mouse_select, 'Visible', 'off');
+    set(handles.voxel_mask, 'Visible', 'off');
     set(handles.slicePosMap, 'Visible', 'on');
     colormap(handles.slicePosMap, 'jet')
 else
@@ -1756,6 +1771,7 @@ else
     set(handles.load_z_stack, 'Visible', 'on');
     set(handles.throw_roi_button, 'Visible', 'on');
     set(handles.roi_mouse_select, 'Visible', 'on');
+    set(handles.voxel_mask, 'Visible', 'on');
     handles.caxis0.String = '';
     handles.caxis1.String = '';
     handles.sPMap_Ax_roi = [];
@@ -2611,6 +2627,14 @@ function load_z_stack_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 [file,path] = uigetfile({'*.klb;*.tif','Image Files (*.klb, *.tif)'; '*.*', 'All Files'}, 'Select reference z-stack to load');
 tic; handles.zStack = readImage([path,filesep,file]); toc; 
+
+stackDim = size(handles.zStack);
+handles.mskScreen = cat(3,zeros(stackDim(1:2)),zeros(stackDim(1:2)),ones(stackDim(1:2)));
+handles.maskedPixels = zeros(stackDim);
+
+segmented_px = vertcat(handles.cellSegmentation.pixels);
+handles.maskedPixels(segmented_px) = 1;
+
 handles = reset_slider_handles(handles);
 handles.calling_function = 'Load Z';
 handles = plot_slice_maps(handles);
@@ -2872,3 +2896,14 @@ end
 handles.metric = metric;
 update_metric_listbox(handles);
 guidata(hObject, handles);
+
+
+% --- Executes on button press in voxel_mask.
+function voxel_mask_Callback(hObject, eventdata, handles)
+% hObject    handle to voxel_mask (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of voxel_mask
+handles = plot_slice_maps(handles);
+guidata(hObject, handles');
