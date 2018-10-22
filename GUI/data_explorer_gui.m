@@ -2701,7 +2701,8 @@ h = h*handles.Sc(1);
 zLvl = round( get(handles.cellSelector, 'Value') );
 roiPos = handles.spPos(handles.roi(handles.roiMaster.Value(1)).members,:);
 % inZ = round( roiPos(:,3)/handles.microns_per_z ) == zLvl;
-inZ = handles.z_ellipse_map(:,zLvl) > 0;
+% inZ = handles.z_ellipse_map(:,zLvl) > 0;
+inZ = handles.z_ellipse_map(handles.roi( handles.roiMaster.Value(1) ).members,zLvl) > 0;
 
 inRectangleX = [roiPos(:,1) > h(1) ] & [roiPos(:,1) < (h(1) + h(3))];
 inRectangleY = [roiPos(:,2) > h(2) ] & [roiPos(:,2) < (h(2) + h(4))];
