@@ -2777,12 +2777,11 @@ current_roi = handles.roiMaster.Value(1);
 
 roi = find(handles.roi(current_roi).members);
 toGrab = roi(get(handles.roiListbox,'Value') );
-members = handles.roi(current_roi).members(toGrab);
 
 if sum(handles.roi(current_roi).members) > 1
-    handles.bait_sequence = mean(handles.fts(members, :), 1);
+    handles.bait_sequence = mean(handles.fts(toGrab, :), 1);
 else
-    handles.bait_sequence = handles.fts(handles.roi(members), :);
+    handles.bait_sequence = handles.fts(toGrab, :);
 end
 % cla(handles.StimTSPlot);
 % plot(handles.StimTSPlot, handles.bait_sequence, 'k');
