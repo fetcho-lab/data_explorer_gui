@@ -139,6 +139,7 @@ else
     handles.roi=[];
     handles.roi.name = 'All';
     handles.roi.members = ones(size(spPos,1),1,'logical');
+    handles.roiMaster.Value = 1;
 %     handles.roi.ROIcellNo = [1:size(spPos,1)]';
     handles = display_roiListbox(handles);
     update_roiMasterList(handles);
@@ -522,7 +523,7 @@ elseif handles.PlotSelect.Value==3 && ~isempty(handles.currView)
     end
     
     if numel(handles.cell_roi_list) > 0 
-        cxy = handles.spPos(handles.cell_roi_list,1:2)/handles.Sc(1,1);
+        cxy = handles.spPos(handles.cell_roi_list,1:2)/handles.Sc(1,1)+handles.Sc(1,1);
 %         rxy = handles.spRadiiXYZ(handles.cell_roi_list,1)/handles.Sc(1,1);
         zLvl = round( get(handles.cellSelector, 'Value') );
         rxy = handles.z_ellipse_map(handles.cell_roi_list, zLvl);
@@ -636,7 +637,7 @@ elseif ~strcmp(handles.calling_function, 'sliceSelector')
            inZ = handles.z_ellipse_map(:,zLvl) > 0;
            roi_in_slice = handles.roi(handles.roiMaster.Value(1)).members & inZ;
            if sum(roi_in_slice) > 0
-               cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1);
+               cxy = handles.spPos(roi_in_slice,1:2)/handles.Sc(1,1)+handles.Sc(1,1);
 %                rxy = handles.spRadiiXYZ(roi_in_slice,1)/handles.Sc(1,1);
                rxy = handles.z_ellipse_map(roi_in_slice, zLvl);
                handles.sAx_roi = viscircles(handles.sliceAx, cxy, rxy, 'LineWidth', 0.5, 'EnhanceVisibility', 0);
@@ -862,7 +863,7 @@ handles = guidata(hObject);
 handles.cell_roi_list = [];
 roi_members_cell_no = find(handles.roi(handles.roiMaster.Value(1)).members);
 handles.SelectedROI = roi_members_cell_no( get(hObject, 'Value') );
-
+handles = plot_selected_roi_in_dffPlot_window(handles);
 % %-----------Display Corr List------------------
 % if handles.AlltoAllCheck==1
 %     [CorrVal handles.CorrCellNo]=sort(handles.Allcor(:,handles.SelectedROI),'descend');
