@@ -75,7 +75,7 @@ global AllPosition %Defined a global here!
 AllPosition=spPos;
 handles.Sc = Sc;
 handles.SizeOfDots=20;%Set default dot size here
-
+handles.CurrentCorrType=1;
 %---------Load dFF if exist--------
 if exist('dFF','var')
     handles.dFF = dFF;
@@ -708,10 +708,10 @@ function popupmenu1_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns popupmenu1 contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupmenu1
 if get(hObject,'Value') ==2
-    handles.CurrentCorrType='Spearman';
+    handles.CurrentCorrType=2;
     print1='Corr type set to Spearman'
 elseif get(hObject,'Value')==1
-    handles.CurrentCorrType='Pearson';
+    handles.CurrentCorrType=1;
     print1='Corr type set to Pearson'
 end
 guidata(hObject,handles);
@@ -726,6 +726,7 @@ function popupmenu1_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+    
 end
 
 
@@ -905,6 +906,7 @@ if CalculateOrNot==1
             msgbox('Calculation Done!');
         end
     elseif strcmp(answer1{1,1},'fluo')||strcmp(answer1{1,1},'Fluo')
+assignin('base','input', handles.CurrentCorrType);
         if isfield(handles,'CurrentCorrType')==0||handles.CurrentCorrType==1
             print1='Calculating Pearson Correlation on Fluo...'
             [handles.Allcor, handles.AllPVal]=TopCorrCellInGroup_Pearson(handles.fts);
